@@ -716,6 +716,20 @@ export class ChatService {
     this.messagesSubject.next([...currentMessages, statusMessage]);
   }
 
+  // Method to ask for account verification
+  private askForAccountVerification(): void {
+    setTimeout(() => {
+      this.addBotMessage({
+        type: 'text',
+        text: 'To help with your request, I need to verify your account. Please provide your Foundation Account Number (FAN).',
+        buttons: [
+          { text: "I know my FAN", action: "provide_fan", primary: true },
+          { text: "I don't know my FAN", action: "show_fan_options" }
+        ]
+      });
+    }, 800);
+  }
+
   // Execute the user's original request after sign-in
   private executeUserRequest(): void {
     if (this.pendingAction === 'bill_analysis' || this.lastUserQuestion.toLowerCase().includes('bill') && this.lastUserQuestion.toLowerCase().includes('high')) {
