@@ -15,191 +15,233 @@ import { ChatMessage } from '../../models/chat.model';
     <!-- Chat Panel -->
     <div *ngIf="isOpen" class="chat-panel">
       <div class="chat-header">
-        <img src="assets/att_header_logo.svg" alt="AT&T Logo" class="att-logo" width="50px" height="50px"/>
-        <button (click)="closeChat()" class="close-button" aria-label="Close chat">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
+        <span class="chat-title">Chat with AT&T</span>
+        <div class="header-controls">
+          <button class="header-button" aria-label="Settings">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"/>
+            </svg>
+          </button>
+          <button class="header-button" aria-label="Minimize">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
+          <button (click)="closeChat()" class="header-button" aria-label="Close chat">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Welcome Header (only shown at start) -->
+      <div *ngIf="showWelcomeHeader" class="welcome-header">
+        <h2 class="welcome-title">Good Evening,<br>Jayakumar</h2>
+        <p class="welcome-time">{{ getCurrentTime() }}</p>
       </div>
 
       <div class="chat-messages" #messagesContainer>
         <div *ngFor="let message of messages" class="message" [class.user-message]="message.isUser">
           <!-- BOT MESSAGE -->
-          <div *ngIf="!message.isUser" class="bot-card">
-            <div class="bot-avatar-text">
-              <img src="assets/avatar.svg" alt="Bot Avatar" class="bot-avatar" />
-              <div class="bot-message-content">
-                <!-- Text Card -->
-                <div *ngIf="message.card.type === 'text'" class="message-text">
-                  {{ message.card.text }}
-                </div>
-                <!-- General Card -->
-                <div *ngIf="message.card.type === 'card'" class="card-content">
-                  <h4 *ngIf="message.card.title" class="card-title">{{ message.card.title }}</h4>
-                  <h5 *ngIf="message.card.subtitle" class="card-subtitle">{{ message.card.subtitle }}</h5>
-                  <p *ngIf="message.card.text" class="card-text">{{ message.card.text }}</p>
-                  <img *ngIf="message.card.imageUrl" [src]="message.card.imageUrl" alt="Card image" class="card-image" />
-                </div>
-                <!-- Bill Summary Card -->
-                <div *ngIf="message.card.type === 'bill-summary' && message.card.billData" class="bill-summary-card">
-                  <div class="bill-header">
-                    <div class="bill-header-content">
-                      <div class="bill-header-row">
-                      
-                        <div class="company-info">
-                          <span class="company-name">{{ message.card.billData.companyName }}</span>
-                          <span class="company-address">{{ message.card.billData.companyAddress }}</span>
-                        </div>
-                      </div>
-                      <div class="bill-header-row">
-                        <div class="bill-meta-item">
-                          <span class="meta-label">Page</span>
-                          <span class="meta-value">{{ message.card.billData.pageInfo }}</span>
-                        </div>
-                        <div class="bill-meta-item">
-                          <span class="meta-label">Issue Date</span>
-                          <span class="meta-value">{{ message.card.billData.issueDate }}</span>
-                        </div>
-                        <div class="bill-meta-item">
-                          <span class="meta-label">Account Number</span>
-                          <span class="meta-value">{{ message.card.billData.accountNumber }}</span>
-                        </div>
-                        <div class="bill-meta-item">
-                          <span class="meta-label">Foundation Account</span>
-                          <span class="meta-value">{{ message.card.billData.foundationAccount }}</span>
-                        </div>
-                        <div class="bill-meta-item">
-                          <span class="meta-label">Invoice</span>
-                          <span class="meta-value">{{ message.card.billData.invoice }}</span>
-                        </div>
+          <div *ngIf="!message.isUser" class="bot-message">
+            <div class="message-header">
+              <span class="sender-name">AT&T</span>
+              <span class="message-timestamp">{{ formatTime(message.timestamp) }}</span>
+            </div>
+            <div class="message-content">
+              <!-- Text Card -->
+              <div *ngIf="message.card.type === 'text'" class="message-text">
+                {{ message.card.text }}
+              </div>
+              
+              <!-- Bill Summary Card -->
+              <div *ngIf="message.card.type === 'bill-summary' && message.card.billData" class="bill-summary-card">
+                <div class="bill-header">
+                  <div class="bill-header-content">
+                    <div class="bill-header-row">
+                      <div class="company-info">
+                        <span class="company-name">{{ message.card.billData.companyName }}</span>
+                        <span class="company-address">{{ message.card.billData.companyAddress }}</span>
                       </div>
                     </div>
-                  </div>
-                  <div class="bill-main-content">
-                    <div class="bill-left-content">
-                      <div class="autopay-section">
-                        <strong>AutoPay:</strong> Save time and money with AutoPay. Enroll today!
+                    <div class="bill-header-row">
+                      <div class="bill-meta-item">
+                        <span class="meta-label">Page</span>
+                        <span class="meta-value">{{ message.card.billData.pageInfo }}</span>
                       </div>
-                      <div class="premier-section">
-                        Visit <a href="https://att.com/premier">att.com/premier</a> for exclusive offers.
+                      <div class="bill-meta-item">
+                        <span class="meta-label">Issue Date</span>
+                        <span class="meta-value">{{ message.card.billData.issueDate }}</span>
                       </div>
-                    </div>
-                    <div class="bill-right-content">
-                      <div class="total-due-circle">
-                        <div class="circle-content">
-                          <div class="total-due-label">Total Due</div>
-                          <div class="total-due-amount">{{ message.card.billData.totalDue.toFixed(2) }}</div>
-                          <div class="due-date-info">
-                            <div class="pay-by-label">Pay by</div>
-                            <div class="due-date">{{ message.card.billData.dueDate }}</div>
-                          </div>
-                        </div>
+                      <div class="bill-meta-item">
+                        <span class="meta-label">Account Number</span>
+                        <span class="meta-value">{{ message.card.billData.accountNumber }}</span>
                       </div>
-                    </div>
-                  </div>
-                  <div class="account-summary">
-                    <h3 class="section-title">Account Summary</h3>
-                    <div class="summary-item">
-                      <span class="summary-label">Last Bill</span>
-                      <span class="summary-amount">{{ message.card.billData.lastBill.toFixed(2) }}</span>
-                    </div>
-                    <div class="summary-item">
-                      <span class="summary-label">Payment - {{ message.card.billData.paymentDate }}</span>
-                      <span class="summary-amount payment-credit">{{ message.card.billData.paymentAmount.toFixed(2) }}</span>
-                    </div>
-                    <div class="summary-item remaining-balance">
-                      <span class="summary-label">Remaining Balance</span>
-                      <span class="summary-amount">{{ message.card.billData.remainingBalance.toFixed(2) }}</span>
-                    </div>
-                  </div>
-                  <div class="service-summary">
-                    <h3 class="section-title">Service Summary</h3>
-                    <div *ngFor="let service of message.card.billData.services" class="service-item">
-                      <div class="service-left">
-                        <span class="service-icon">📱</span>
-                        <div>
-                          <div class="service-name">{{ service.name }}</div>
-                          <div class="service-page">{{ service.pageRef }}</div>
-                        </div>
+                      <div class="bill-meta-item">
+                        <span class="meta-label">Foundation Account</span>
+                        <span class="meta-value">{{ message.card.billData.foundationAccount }}</span>
                       </div>
-                      <span class="service-amount">{{ service.amount.toFixed(2) }}</span>
-                    </div>
-                    <div class="total-services-row">
-                      <span class="total-services-label">Total Services</span>
-                      <span class="total-services-amount">{{ message.card.billData.totalServices.toFixed(2) }}</span>
-                    </div>
-                  </div>
-                  <div class="final-total">
-                    <div class="final-total-content">
-                      <div class="final-total-left">
-                        <span class="final-total-label">Total Amount Due</span>
-                        <span class="final-due-date">Due {{ message.card.billData.dueDate }}</span>
+                      <div class="bill-meta-item">
+                        <span class="meta-label">Invoice</span>
+                        <span class="meta-value">{{ message.card.billData.invoice }}</span>
                       </div>
-                      <span class="final-total-amount">{{ message.card.billData.totalDue.toFixed(2) }}</span>
                     </div>
                   </div>
                 </div>
-                <!-- Form Card (Optional, if needed) -->
-                <div *ngIf="message.card.type === 'form'" class="card-content">
-                  <h4 *ngIf="message.card.title" class="card-title">{{ message.card.title }}</h4>
-                  <h5 *ngIf="message.card.subtitle" class="card-subtitle">{{ message.card.subtitle }}</h5>
-                  <p *ngIf="message.card.text" class="card-text">{{ message.card.text }}</p>
-                  <form class="form-content">
-                    <div *ngFor="let field of message.card.formFields" class="form-field">
-                      <label>{{ field.label }}</label>
-                      <input
-                        *ngIf="field.type === 'text' || field.type === 'number'"
-                        [type]="field.type"
-                        [name]="field.name"
-                        [placeholder]="field.placeholder || ''"
-                        class="form-input"
-                      />
-                      <select *ngIf="field.type === 'select'" [name]="field.name" class="form-select">
-                        <option *ngFor="let option of field.options" [value]="option">{{ option }}</option>
-                      </select>
+                <div class="bill-main-content">
+                  <div class="bill-left-content">
+                    <div class="autopay-section">
+                      <strong>AutoPay:</strong> Save time and money with AutoPay. Enroll today!
                     </div>
-                  </form>
+                    <div class="premier-section">
+                      Visit <a href="https://att.com/premier">att.com/premier</a> for exclusive offers.
+                    </div>
+                  </div>
+                  <div class="bill-right-content">
+                    <div class="total-due-circle">
+                      <div class="circle-content">
+                        <div class="total-due-label">Total Due</div>
+                        <div class="total-due-amount">{{ message.card.billData.totalDue.toFixed(2) }}</div>
+                        <div class="due-date-info">
+                          <div class="pay-by-label">Pay by</div>
+                          <div class="due-date">{{ message.card.billData.dueDate }}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <!-- Buttons -->
-                <div *ngIf="message.card.buttons && message.card.buttons.length > 0" class="message-buttons">
-                  <button 
-                    *ngFor="let button of message.card.buttons"
-                    (click)="handleButtonClick(button.action, button.data)"
-                    class="action-button"
-                  >
-                    {{ button.text }}
+                <div class="account-summary">
+                  <h3 class="section-title">Account Summary</h3>
+                  <div class="summary-item">
+                    <span class="summary-label">Last Bill</span>
+                    <span class="summary-amount">{{ message.card.billData.lastBill.toFixed(2) }}</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="summary-label">Payment - {{ message.card.billData.paymentDate }}</span>
+                    <span class="summary-amount payment-credit">{{ message.card.billData.paymentAmount.toFixed(2) }}</span>
+                  </div>
+                  <div class="summary-item remaining-balance">
+                    <span class="summary-label">Remaining Balance</span>
+                    <span class="summary-amount">{{ message.card.billData.remainingBalance.toFixed(2) }}</span>
+                  </div>
+                </div>
+                <div class="service-summary">
+                  <h3 class="section-title">Service Summary</h3>
+                  <div *ngFor="let service of message.card.billData.services" class="service-item">
+                    <div class="service-left">
+                      <span class="service-icon">📱</span>
+                      <div>
+                        <div class="service-name">{{ service.name }}</div>
+                        <div class="service-page">{{ service.pageRef }}</div>
+                      </div>
+                    </div>
+                    <span class="service-amount">{{ service.amount.toFixed(2) }}</span>
+                  </div>
+                  <div class="total-services-row">
+                    <span class="total-services-label">Total Services</span>
+                    <span class="total-services-amount">{{ message.card.billData.totalServices.toFixed(2) }}</span>
+                  </div>
+                </div>
+                <div class="final-total">
+                  <div class="final-total-content">
+                    <div class="final-total-left">
+                      <span class="final-total-label">Total Amount Due</span>
+                      <span class="final-due-date">Due {{ message.card.billData.dueDate }}</span>
+                    </div>
+                    <span class="final-total-amount">{{ message.card.billData.totalDue.toFixed(2) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bill Analysis Card -->
+              <div *ngIf="message.card.type === 'bill-analysis'" class="bill-analysis-card">
+                <div class="analysis-content">
+                  <p class="analysis-text">{{ message.card.text }}</p>
+                  <div *ngIf="message.card.billBreakdown" class="bill-breakdown">
+                    <div *ngFor="let item of message.card.billBreakdown" class="breakdown-item">
+                      <div class="breakdown-line">
+                        <strong>{{ item.lineNumber }} ({{ item.name }}):</strong>
+                        <span class="breakdown-change">{{ item.changeText }}</span>
+                      </div>
+                      <ul class="breakdown-details">
+                        <li *ngFor="let detail of item.details">{{ detail }}</li>
+                      </ul>
+                    </div>
+                    <div class="bill-totals">
+                      <p><strong>This month's total bill is {{ message.card.currentTotal }}, while last month's was {{ message.card.previousTotal }}.</strong></p>
+                      <p>{{ message.card.autoPayInfo }}</p>
+                      <p>{{ message.card.additionalInfo }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Payment Method Card -->
+              <div *ngIf="message.card.type === 'payment-method'" class="payment-method-card">
+                <div class="payment-header">
+                  <h4>Payment Method</h4>
+                  <img src="assets/norton-logo.png" alt="Norton Secured" class="norton-logo" />
+                </div>
+                <div class="payment-options">
+                  <button class="payment-option selected">Credit card</button>
+                  <button class="payment-option">Bank Account</button>
+                </div>
+                <div class="different-card-option">
+                  <button class="different-card-btn">
+                    <span>Pay with a different card</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                      <line x1="2" y1="7" x2="22" y2="7"/>
+                    </svg>
                   </button>
                 </div>
-                <!-- Timestamp -->
-                <div class="message-time">{{ formatTime(message.timestamp) }}</div>
+                <div class="payment-actions">
+                  <button class="continue-payment-btn">Continue with payment</button>
+                  <button class="cancel-payment-btn">Cancel</button>
+                </div>
+              </div>
+
+              <!-- Status Messages -->
+              <div *ngIf="message.card.type === 'status'" class="status-message" [class]="'status-' + message.card.statusType">
+                <div class="status-icon">
+                  <span *ngIf="message.card.statusType === 'success'">✅</span>
+                  <span *ngIf="message.card.statusType === 'info'">ℹ️</span>
+                </div>
+                <span class="status-text">{{ message.card.text }}</span>
+              </div>
+
+              <!-- Buttons -->
+              <div *ngIf="message.card.buttons && message.card.buttons.length > 0" class="message-buttons">
+                <button 
+                  *ngFor="let button of message.card.buttons"
+                  (click)="handleButtonClick(button.action, button.data)"
+                  class="action-button"
+                  [class.primary-button]="button.primary"
+                >
+                  {{ button.text }}
+                </button>
               </div>
             </div>
           </div>
 
           <!-- USER MESSAGE -->
-          <div *ngIf="message.isUser" class="user-card">
-            <div *ngIf="message.card.type === 'text'" class="message-text">
-              {{ message.card.text }}
+          <div *ngIf="message.isUser" class="user-message-container">
+            <div class="user-timestamp">{{ formatTime(message.timestamp) }}</div>
+            <div class="user-message-bubble">
+              <div *ngIf="message.card.type === 'text'" class="message-text">
+                {{ message.card.text }}
+              </div>
             </div>
-            <div *ngIf="message.card.type === 'card'" class="card-content">
-              <h4 *ngIf="message.card.title" class="card-title">{{ message.card.title }}</h4>
-              <h5 *ngIf="message.card.subtitle" class="card-subtitle">{{ message.card.subtitle }}</h5>
-              <p *ngIf="message.card.text" class="card-text">{{ message.card.text }}</p>
-              <img *ngIf="message.card.imageUrl" [src]="message.card.imageUrl" alt="Card image" class="card-image" />
-            </div>
-            <div *ngIf="message.card.buttons && message.card.buttons.length > 0" class="message-buttons">
-              <button 
-                *ngFor="let button of message.card.buttons"
-                (click)="handleButtonClick(button.action, button.data)"
-                class="action-button"
-              >
-                {{ button.text }}
-              </button>
-            </div>
-            <div class="message-time-user">{{ formatTime(message.timestamp) }}</div>
           </div>
+        </div>
+
+        <!-- Signed In Status -->
+        <div *ngIf="showSignedInStatus" class="signed-in-status">
+          <span class="status-icon">✅</span>
+          <span class="status-text">You are now signed in</span>
         </div>
       </div>
 
@@ -209,17 +251,18 @@ import { ChatMessage } from '../../models/chat.model';
             type="text"
             [(ngModel)]="currentMessage"
             name="message"
-            placeholder="Type your message..."
+            placeholder="Enter a question or response"
             class="message-input"
             #messageInput
           />
           <button type="submit" [disabled]="!currentMessage.trim()" class="send-button">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="22" y1="2" x2="11" y2="13"/>
+              <path d="M22 2L11 13"/>
               <polygon points="22,2 15,22 11,13 2,9"/>
             </svg>
           </button>
         </form>
+        <p class="privacy-notice">Chats are recorded for quality and purposes stated in our privacy notice.</p>
       </div>
     </div>
 
@@ -236,211 +279,458 @@ import { ChatMessage } from '../../models/chat.model';
   `,
   styles: [`
     :host {
-      --primary-color: #00388F; /* AT&T blue */
-      --primary-hover: #002E7A;
+      --primary-color: #4A90E2;
+      --primary-hover: #357ABD;
       --background-color: #ffffff;
-      --text-color: #1f2937;
-      --secondary-text: #6b7280;
-      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      --border-radius: 8px;
+      --text-color: #333333;
+      --secondary-text: #666666;
+      --border-color: #e0e0e0;
+      --chat-bg: #f5f5f5;
+      --user-message-bg: #4A90E2;
+      --bot-message-bg: #e8e8e8;
     }
 
     .chat-panel {
       position: fixed;
-      bottom: .3rem;
-      right: 0rem;
-      width: 450px;
+      bottom: 0;
+      right: 0;
+      width: 400px;
       max-width: calc(100vw - 2rem);
-      height: 650px;
+      height: 600px;
       background: var(--background-color);
-      border-radius: var(--border-radius);
-      box-shadow: var(--card-shadow);
-      border: 1px solid #e5e7eb;
+      border-radius: 8px 8px 0 0;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
       display: flex;
       flex-direction: column;
       z-index: 1000;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
     .chat-header {
-      background: linear-gradient(285.78deg, #007AE2 0%, #00388F 100%);
+      background: #666666;
       color: white;
-      padding: 10px;
-      border-radius: var(--border-radius) var(--border-radius) 0 0;
+      padding: 12px 16px;
+      border-radius: 8px 8px 0 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .att-logo {
-      width: 50px;
-      height: 50px;
+    .chat-title {
+      font-size: 16px;
+      font-weight: 500;
     }
 
-    .close-button {
+    .header-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .header-button {
       background: none;
       border: none;
       color: white;
       cursor: pointer;
-      padding: 0.5rem;
+      padding: 4px;
       border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .close-button:hover {
+    .header-button:hover {
       background: rgba(255, 255, 255, 0.15);
+    }
+
+    .welcome-header {
+      background: var(--background-color);
+      padding: 24px 16px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .welcome-title {
+      font-size: 24px;
+      font-weight: 400;
+      color: var(--text-color);
+      margin: 0 0 8px 0;
+      line-height: 1.2;
+    }
+
+    .welcome-time {
+      font-size: 14px;
+      color: var(--secondary-text);
+      margin: 0;
     }
 
     .chat-messages {
       flex: 1;
       overflow-y: auto;
-      padding: 1rem;
+      padding: 16px;
+      background: var(--chat-bg);
       display: flex;
       flex-direction: column;
-      gap: 1rem;
-      background: #f9fafb;
+      gap: 16px;
     }
 
     .message {
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      max-width: 80%;
     }
 
-    .message.user-message {
-      align-self: flex-end;
-      align-items: flex-end;
+    .bot-message {
+      align-self: flex-start;
+      max-width: 85%;
     }
 
-    .bot-avatar-text {
+    .message-header {
       display: flex;
-      align-items: flex-start;
-      gap: 0.5rem;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
     }
 
-    .bot-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      object-fit: contain;
+    .sender-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-color);
     }
 
-    .bot-message-content {
-      background: var(--background-color);
-      border-radius: var(--border-radius);
-      box-shadow: var(--card-shadow);
-      padding: 1rem;
+    .message-timestamp {
+      font-size: 11px;
+      color: var(--secondary-text);
+    }
+
+    .message-content {
+      background: var(--bot-message-bg);
+      border-radius: 16px 16px 16px 4px;
+      padding: 12px 16px;
       position: relative;
-      width: 350px;
-    }
-
-    .user-card {
-      background: #0067E5; /* Blue background for user card */
-      border-radius: var(--border-radius);
-      box-shadow: var(--card-shadow);
-      padding: 1rem;
-      position: relative;
-    }
-
-    .virtual-assistant-label {
-      font-weight: bold;
-      color: var(--primary-color);
-      margin-bottom: 0.5rem;
-      display: block;
     }
 
     .message-text {
-      font-size: 0.875rem;
-      line-height: 1.5;
+      font-size: 14px;
+      line-height: 1.4;
       color: var(--text-color);
       white-space: pre-wrap;
+      margin: 0;
     }
 
-    .user-card .message-text {
-      color: white; /* White text for user card */
-    }
-
-    .card-content {
+    .user-message-container {
+      align-self: flex-end;
+      max-width: 85%;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      align-items: flex-end;
     }
 
-    .card-title {
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--text-color);
-      margin: 0;
-    }
-
-    .card-subtitle {
-      font-size: 0.875rem;
-      font-weight: 500;
+    .user-timestamp {
+      font-size: 11px;
       color: var(--secondary-text);
-      margin: 0;
+      margin-bottom: 4px;
     }
 
-    .card-text {
-      font-size: 0.875rem;
-      color: var(--text-color);
-      white-space: pre-wrap;
-      margin: 0;
+    .user-message-bubble {
+      background: var(--user-message-bg);
+      color: white;
+      border-radius: 16px 16px 4px 16px;
+      padding: 12px 16px;
     }
 
-    .card-image {
-      max-width: 100%;
-      border-radius: 8px;
-      margin-top: 0.5rem;
-    }
-
-    .message-time {
-      font-size: 0.7rem;
-      color: var(--secondary-text);
-      text-align: right;
-      margin-top: 0.3rem;
-    }
-
-    .message-time-user {
-      font-size: 0.7rem;
-      color: #FFF;
-      text-align: right;
-      margin-top: 0.3rem;
+    .user-message-bubble .message-text {
+      color: white;
     }
 
     .message-buttons {
       display: flex;
-      gap: 0.5rem;
-      margin-top: 0.75rem;
-      padding-left: 0%;
-    }
-
-    .user-message .message-buttons {
-      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
     }
 
     .action-button {
-      font-family: ATT Aleck Sans Medium;
-      border: 1px solid #0057b8;
-      outline: none;
-      color: #0057b8;
-      background-color: #fff;
-      min-width: 5rem;
+      background: var(--background-color);
+      border: 1px solid var(--primary-color);
+      color: var(--primary-color);
       padding: 8px 16px;
+      border-radius: 20px;
       font-size: 14px;
-      position: relative;
-      border-radius: 19px;
-      -ms-flex-negative: 0;
-      flex-shrink: 0;
-      margin: 4px;
-      max-width: 100%;
-      text-wrap: wrap;
-      height: auto;
+      cursor: pointer;
+      transition: all 0.2s ease;
     }
 
     .action-button:hover {
-      background-color: #0057b8;
+      background: var(--primary-color);
       color: white;
     }
 
+    .action-button.primary-button {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .action-button.primary-button:hover {
+      background: var(--primary-hover);
+    }
+
+    .bill-analysis-card {
+      background: var(--background-color);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 8px;
+    }
+
+    .analysis-text {
+      font-size: 14px;
+      line-height: 1.4;
+      margin-bottom: 16px;
+    }
+
+    .breakdown-item {
+      margin-bottom: 16px;
+    }
+
+    .breakdown-line {
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .breakdown-change {
+      color: var(--primary-color);
+      font-weight: 500;
+    }
+
+    .breakdown-details {
+      list-style: none;
+      padding-left: 16px;
+      margin: 0;
+    }
+
+    .breakdown-details li {
+      font-size: 13px;
+      color: var(--secondary-text);
+      margin-bottom: 4px;
+      position: relative;
+    }
+
+    .breakdown-details li:before {
+      content: "○";
+      position: absolute;
+      left: -12px;
+      color: var(--primary-color);
+    }
+
+    .bill-totals {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .bill-totals p {
+      font-size: 14px;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+
+    .payment-method-card {
+      background: var(--background-color);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .payment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .payment-header h4 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .norton-logo {
+      height: 20px;
+    }
+
+    .payment-options {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .payment-option {
+      background: var(--background-color);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .payment-option.selected {
+      background: #333;
+      color: white;
+      border-color: #333;
+    }
+
+    .different-card-option {
+      margin-bottom: 16px;
+    }
+
+    .different-card-btn {
+      background: var(--background-color);
+      border: 1px solid var(--border-color);
+      padding: 12px 16px;
+      border-radius: 4px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .payment-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .continue-payment-btn {
+      background: #ccc;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .cancel-payment-btn {
+      background: var(--background-color);
+      border: 1px solid var(--primary-color);
+      color: var(--primary-color);
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .status-message {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+    }
+
+    .status-icon {
+      font-size: 16px;
+    }
+
+    .status-text {
+      font-size: 14px;
+      color: var(--text-color);
+    }
+
+    .signed-in-status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      background: #e8f5e8;
+      border-radius: 8px;
+      margin: 8px 16px;
+    }
+
+    .signed-in-status .status-icon {
+      color: #28a745;
+    }
+
+    .signed-in-status .status-text {
+      color: #28a745;
+      font-weight: 500;
+      font-style: italic;
+    }
+
+    .chat-input {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border-color);
+      background: var(--background-color);
+    }
+
+    .input-form {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .message-input {
+      flex: 1;
+      padding: 10px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .message-input:focus {
+      border-color: var(--primary-color);
+    }
+
+    .send-button {
+      background: #ccc;
+      color: white;
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .send-button:hover:not(:disabled) {
+      background: var(--primary-color);
+    }
+
+    .send-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .privacy-notice {
+      font-size: 11px;
+      color: var(--secondary-text);
+      text-align: center;
+      margin: 0;
+      line-height: 1.3;
+    }
+
+    .chat-icon {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background-color: transparent;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      z-index: 1000;
+    }
+
+    .chat-icon-img {
+      width: 90px;
+      height: 90px;
+      object-fit: contain;
+    }
+
+    /* Bill Summary Styles */
     .bill-summary-card {
       background: #ffffff;
       border-radius: 8px;
@@ -449,6 +739,7 @@ import { ChatMessage } from '../../models/chat.model';
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 14px;
       line-height: 1.4;
+      margin-top: 8px;
     }
 
     .bill-header {
@@ -470,12 +761,6 @@ import { ChatMessage } from '../../models/chat.model';
       display: flex;
       flex-direction: column;
       gap: 10px;
-    }
-
-    .att-bill-logo {
-      width: 50px;
-      height: 50px;
-      flex-shrink: 0;
     }
 
     .company-info {
@@ -543,9 +828,9 @@ import { ChatMessage } from '../../models/chat.model';
     }
 
     .total-due-circle {
-      width: 180px;
-      height: 180px;
-      border: 8px solid #5bc0de;
+      width: 120px;
+      height: 120px;
+      border: 6px solid #5bc0de;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -559,21 +844,21 @@ import { ChatMessage } from '../../models/chat.model';
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 2px;
     }
 
     .total-due-label {
-      font-size: 14px;
+      font-size: 11px;
       color: #6c757d;
-      margin-bottom: 5px;
+      margin-bottom: 2px;
     }
 
     .total-due-amount {
-      font-size: 32px;
+      font-size: 20px;
       font-weight: bold;
       color: #212529;
       line-height: 1;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
 
     .due-date-info {
@@ -581,13 +866,13 @@ import { ChatMessage } from '../../models/chat.model';
     }
 
     .pay-by-label {
-      font-size: 12px;
+      font-size: 10px;
       color: #6b7280;
-      margin-bottom: 2px;
+      margin-bottom: 1px;
     }
 
     .due-date {
-      font-size: 13px;
+      font-size: 11px;
       color: #212529;
       font-weight: 500;
     }
@@ -598,11 +883,11 @@ import { ChatMessage } from '../../models/chat.model';
     }
 
     .section-title {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 600;
       color: #212529;
-      margin: 0 0 15px 0;
-      padding-bottom: 8px;
+      margin: 0 0 12px 0;
+      padding-bottom: 6px;
       border-bottom: 1px solid #dee2e6;
     }
 
@@ -610,25 +895,25 @@ import { ChatMessage } from '../../models/chat.model';
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 0;
+      padding: 6px 0;
     }
 
     .summary-item.remaining-balance {
       border-top: 1px solid #dee2e6;
-      margin-top: 8px;
-      padding-top: 12px;
+      margin-top: 6px;
+      padding-top: 10px;
       font-weight: 600;
     }
 
     .summary-label {
       color: #495057;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .summary-amount {
       font-weight: 600;
       color: #212529;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .payment-credit {
@@ -645,61 +930,61 @@ import { ChatMessage } from '../../models/chat.model';
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 0;
+      padding: 8px 0;
     }
 
     .service-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .service-icon {
-      font-size: 18px;
+      font-size: 16px;
       color: #5bc0de;
     }
 
     .service-name {
       color: #495057;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .service-page {
       color: #6c757d;
-      font-size: 12px;
+      font-size: 11px;
       font-style: italic;
     }
 
     .service-amount {
       font-weight: 600;
       color: #212529;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .total-services-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 12px 0 8px 0;
+      padding: 10px 0 6px 0;
       border-top: 1px solid #dee2e6;
-      margin-top: 8px;
+      margin-top: 6px;
     }
 
     .total-services-label {
       font-weight: 600;
       color: #212529;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .total-services-amount {
       font-weight: 600;
       color: #212529;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .final-total {
       background: #f8f9fa;
-      padding: 20px;
+      padding: 16px 20px;
       border-top: 1px solid #e9ecef;
     }
 
@@ -712,105 +997,33 @@ import { ChatMessage } from '../../models/chat.model';
     .final-total-left {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
     }
 
     .final-total-label {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 600;
       color: #212529;
     }
 
     .final-due-date {
-      font-size: 13px;
+      font-size: 12px;
       color: #6c757d;
     }
 
     .final-total-amount {
-      font-size: 24px;
+      font-size: 20px;
       font-weight: bold;
       color: #212529;
     }
 
-    .chat-input {
-      padding: 1rem;
-      border-top: 1px solid #e5e7eb;
-      background: var(--background-color);
-      border-radius: 0 0 var(--border-radius) var(--border-radius);
-    }
-
-    .input-form {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-    }
-
-    .message-input {
-      flex: 1;
-      padding: 0.75rem 1rem;
-      border: 1px solid #d1d5db;
-      border-radius: 20px;
-      font-size: 0.875rem;
-    }
-
-    .send-button {
-      background: var(--primary-color);
-      color: white;
-      border: none;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      cursor: pointer;
-    }
-
-    .send-button:hover:not(:disabled) {
-      background: var(--primary-hover);
-    }
-
-    .chat-icon {
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      background-color: transparent;
-      border-radius: 50%;
-      border: none;
-      cursor: pointer;
-      z-index: 1000;
-    }
-
-    .chat-icon-img {
-      width: 90px;
-      height: 90px;
-      object-fit: contain;
-    }
-
-    .form-content {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
-    }
-
-    .form-field {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-
-    .form-input,
-    .form-select {
-      padding: 0.5rem;
-      border: 1px solid #d1d5db;
-      border-radius: 4px;
-      font-size: 0.875rem;
-    }
-
     @media (max-width: 480px) {
       .chat-panel {
-        width: calc(100vw - 2rem);
-        height: calc(100vh - 4rem);
-        bottom: 1rem;
-        right: 1rem;
+        width: 100vw;
+        height: 100vh;
+        bottom: 0;
+        right: 0;
+        border-radius: 0;
       }
 
       .chat-icon {
@@ -819,8 +1032,17 @@ import { ChatMessage } from '../../models/chat.model';
       }
 
       .chat-icon-img {
-        width: 90px;
-        height: 90px;
+        width: 70px;
+        height: 70px;
+      }
+
+      .total-due-circle {
+        width: 100px;
+        height: 100px;
+      }
+
+      .total-due-amount {
+        font-size: 16px;
       }
     }
   `]
@@ -829,6 +1051,8 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
   messages: ChatMessage[] = [];
   isOpen = false;
   currentMessage = '';
+  showWelcomeHeader = true;
+  showSignedInStatus = false;
   
   private subscriptions: Subscription[] = [];
 
@@ -849,6 +1073,14 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
         if (isOpen) {
           setTimeout(() => this.scrollToBottom(), 100);
         }
+      }),
+      this.authService.currentUser$.subscribe(user => {
+        if (user.isAuthenticated && this.isOpen) {
+          this.showSignedInStatus = true;
+          setTimeout(() => {
+            this.showSignedInStatus = false;
+          }, 3000);
+        }
       })
     );
   }
@@ -859,6 +1091,7 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
 
   openChat(): void {
     this.chatService.openChat();
+    this.showWelcomeHeader = true;
   }
 
   closeChat(): void {
@@ -869,6 +1102,7 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
     if (this.currentMessage.trim()) {
       this.chatService.sendMessage(this.currentMessage.trim());
       this.currentMessage = '';
+      this.showWelcomeHeader = false;
     }
   }
 
@@ -878,23 +1112,27 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
     } else {
       this.chatService.handleButtonClick(action, data);
     }
+    this.showWelcomeHeader = false;
   }
 
   formatTime(timestamp: Date): string {
-    return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
-
-  displayCurrentDateTime(): string {
-    const now = new Date();
-    return now.toLocaleString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric', 
-      hour: '2-digit', 
-      minute: '2-digit', 
+    return timestamp.toLocaleTimeString([], { 
+      hour: 'numeric', 
+      minute: '2-digit',
       hour12: true 
     });
+  }
+
+  getCurrentTime(): string {
+    const now = new Date();
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayName = days[now.getDay()];
+    const time = now.toLocaleTimeString([], { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
+    return `${dayName} ${time}`;
   }
 
   private scrollToBottom(): void {
