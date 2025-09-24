@@ -142,6 +142,23 @@ export class ChatService {
   private processUserMessage(text: string): void {
     const lowerText = text.toLowerCase();
 
+    // Check if user is providing FAN number (8-digit number)
+    if (/^\d{8}$/.test(text.trim())) {
+      this.selectedFAN = text.trim();
+      this.selectedCompanyName = this.getCompanyNameByFAN(this.selectedFAN);
+      if (this.selectedCompanyName) {
+        this.showBANOptions(this.selectedFAN, this.selectedCompanyName);
+        return;
+      }
+    }
+
+    // Check if user is providing BAN number (12-digit number)
+    if (/^\d{12}$/.test(text.trim())) {
+      this.selectedBAN = text.trim();
+      this.proceedWithOriginalRequest();
+      return;
+    }
+
     if (lowerText.includes('view bill') || lowerText.includes('bill summary')) {
       this.handleViewBillRequest();
     } else if (lowerText.includes('why my bill is too high') || lowerText.includes('bill analysis')) {
@@ -410,15 +427,8 @@ export class ChatService {
 
       case 'provide_fan':
         this.addBotMessage({
-          type: 'form',
-          title: 'Foundation Account Number',
-          text: 'Please enter your Foundation Account Number (FAN):',
-          formFields: [
-            { label: "Foundation Account Number", type: "text", name: "fanNumber", placeholder: "Enter your FAN" }
-          ],
-          buttons: [
-            { text: "Submit", action: "submit_fan", primary: true }
-          ]
+          type: 'text',
+          text: 'Please type your Foundation Account Number (FAN) in the chat:'
         });
         break;
 
@@ -806,7 +816,6 @@ export class ChatService {
       type: 'text',
       text: 'To help you with your request, I need to verify your account information. Please provide your Foundation Account Number (FAN).',
       buttons: [
-        { text: "I know my FAN", action: "provide_fan", primary: true },
         { text: "I don't know my FAN", action: "show_fan_options", primary: false }
       ]
     });
@@ -936,5 +945,18 @@ export class ChatService {
     this.selectedFAN = '';
     this.selectedBAN = '';
     this.selectedCompanyName = '';
+  }
+
+  private getCompanyNameByFAN(fan: string): string {
+    switch (fan) {
+      case '59285142':
+        return 'INSPECTOR DRAIN INC';
+      case '48392751':
+        return 'TECH SOLUTIONS LLC';
+      case '73641829':
+        return 'GLOBAL SERVICES CORP';
+      default:
+        return '';
+    }
   }
 }
