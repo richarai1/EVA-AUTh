@@ -147,7 +147,20 @@ export class ChatService {
       this.selectedFAN = text.trim();
       this.selectedCompanyName = this.getCompanyNameByFAN(this.selectedFAN);
       if (this.selectedCompanyName) {
-        this.showBANOptions(this.selectedFAN, this.selectedCompanyName);
+        // Check if the original request was for view_bill, if so, proceed directly
+        if (this.pendingAction === 'view_bill') {
+          this.addBotMessage({
+            type: 'text',
+            text: `Perfect! I've verified your account for ${this.selectedCompanyName}. Let me pull up your bill summary...`
+          });
+          
+          setTimeout(() => {
+            this.showBillSummary();
+            this.clearPendingState();
+          }, 2500);
+        } else {
+          this.showBANOptions(this.selectedFAN, this.selectedCompanyName);
+        }
         return;
       }
     }
@@ -165,8 +178,6 @@ export class ChatService {
       this.handleBillAnalysisRequest();
     } else if (lowerText.includes('download bill') || lowerText.includes('download pdf')) {
       this.handleDownloadBillRequest();
-    } else if (lowerText.includes('bill pay') || lowerText.includes('pay bill')) {
-      this.handleBillPayRequest();
     } else if (lowerText.includes('pay') || lowerText.includes('payment')) {
       this.handlePayBillRequest();
     } else if (/^\d+(\.\d{2})?$/.test(text.trim())) {
@@ -233,7 +244,8 @@ export class ChatService {
 
   private handleDownloadBillRequest(): void {
     if (this.authService.isAuthenticated()) {
-      this.handleDownloadPdf();
+      this.pendingAction = 'download_bill';
+      this.askForAccountVerification();
     } else {
       this.pendingAction = 'download_bill';
       sessionStorage.setItem('reopenChatAfterLogin', 'true');
@@ -253,23 +265,10 @@ export class ChatService {
       }, 1000);
     }
   }
-  private handleBillPayRequest(): void {
-    this.addBotMessage({
-      type: 'text',
-      text: "So I can get you the right info, what service are you asking about?",
-      buttons: [
-        { text: "AT&T Wireless", action: "service_wireless", primary: true },
-        { text: "AT&T Internet", action: "service_internet", primary: true }
-      ]
-    });
-  }
-
   private handlePayBillRequest(): void {
     if (this.authService.isAuthenticated()) {
-      this.addBotMessage({
-        type: 'text',
-        text: "Please enter the amount you want to pay:"
-      });
+      this.pendingAction = 'pay_bill';
+      this.askForAccountVerification();
     } else {
       this.pendingAction = 'pay_bill';
       sessionStorage.setItem('reopenChatAfterLogin', 'true');
@@ -812,9 +811,22 @@ export class ChatService {
   }
 
   private askForAccountVerification(): void {
+    // Customize message based on pending action
+    let message = 'To help you with your request, I need to verify your account information. Please provide your Foundation Account Number (FAN).';
+    
+    if (this.pendingAction === 'view_bill') {
+      message = 'To show you your bill, I need to verify your account. Please provide your Foundation Account Number (FAN).';
+    } else if (this.pendingAction === 'pay_bill') {
+      message = 'To help you make a payment, I need to verify your account. Please provide your Foundation Account Number (FAN).';
+    } else if (this.pendingAction === 'download_bill') {
+      message = 'To download your bill, I need to verify your account. Please provide your Foundation Account Number (FAN).';
+    } else if (this.pendingAction === 'bill_analysis') {
+      message = 'To analyze your bill, I need to verify your account. Please provide your Foundation Account Number (FAN).';
+    }
+    
     this.addBotMessage({
       type: 'text',
-      text: 'To help you with your request, I need to verify your account information. Please provide your Foundation Account Number (FAN).',
+      text: message,
       buttons: [
         { text: "I don't know my FAN", action: "show_fan_options", primary: false }
       ]
@@ -880,16 +892,14 @@ export class ChatService {
   }
 
   private proceedWithOriginalRequest(): void {
-    this.addBotMessage({
-      type: 'text',
-      text: `Perfect! I've verified your account for ${this.selectedCompanyName}. Let me help you with your request.`
-    });
+    let processingMessage = 'Let me help you with your request...';
+    let delay = 2000;
 
     setTimeout(() => {
       if (this.pendingAction === 'bill_analysis' || this.lastUserQuestion.toLowerCase().includes('bill') && this.lastUserQuestion.toLowerCase().includes('high')) {
         this.addBotMessage({
           type: 'text',
-          text: 'Let me analyze your bill for you...'
+          text: `Perfect! I've verified your account for ${this.selectedCompanyName}. Let me analyze your bill for you...`
         });
         
         setTimeout(() => {
@@ -899,7 +909,7 @@ export class ChatService {
       } else if (this.pendingAction === 'view_bill' || this.lastUserQuestion.toLowerCase().includes('view bill')) {
         this.addBotMessage({
           type: 'text',
-          text: 'Let me pull up your bill summary...'
+          text: `Perfect! I've verified your account for ${this.selectedCompanyName}. Let me pull up your bill summary...`
         });
         
         setTimeout(() => {
@@ -907,23 +917,29 @@ export class ChatService {
           this.clearPendingState();
         }, 2500);
       } else if (this.pendingAction === 'download_bill' || this.lastUserQuestion.toLowerCase().includes('download')) {
+        this.addBotMessage({
+          type: 'text',
+          text: `Perfect! I've verified your account for ${this.selectedCompanyName}. Let me prepare your bill for download...`
+        });
+        
         setTimeout(() => {
           this.handleDownloadPdf();
           this.clearPendingState();
         }, 1500);
       } else if (this.pendingAction === 'pay_bill' || this.lastUserQuestion.toLowerCase().includes('pay')) {
+        this.addBotMessage({
+          type: 'text',
+          text: `Perfect! I've verified your account for ${this.selectedCompanyName}. Please enter the amount you want to pay:`
+        });
+        
         setTimeout(() => {
-          this.addBotMessage({
-            type: 'text',
-            text: "Please enter the amount you want to pay:"
-          });
           this.clearPendingState();
-        }, 1500);
+        }, 1000);
       } else {
         setTimeout(() => {
           this.addBotMessage({
             type: 'text',
-            text: "How can I help you today?",
+            text: `Perfect! I've verified your account for ${this.selectedCompanyName}. How can I help you today?`,
             buttons: [
               { text: "View Bill", action: "view_bill", primary: true },
               { text: "Pay Bill", action: "pay_bill", primary: true },
@@ -934,7 +950,7 @@ export class ChatService {
           this.clearPendingState();
         }, 1500);
       }
-    }, 2000);
+    }, 1000);
   }
 
   // Clear pending state to prevent duplicate executions
