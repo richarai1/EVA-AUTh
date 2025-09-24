@@ -43,13 +43,9 @@ export class ChatService {
       timestamp: new Date(),
       card: {
         type: 'text',
-        text: "How can I help you?",
-        buttons: [
-          { text: "View Bill", action: "view_bill", primary: true },
-          { text: "Pay Bill", action: "pay_bill", primary: true },
-          { text: "Download Bill", action: "download_bill", primary: true },
-          { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
-        ]
+        text: "Hi there! Let's get you some help. Please select an option so I can connect you.",
+       
+    
       }
     };
     this.messagesSubject.next([welcomeMessage]);
