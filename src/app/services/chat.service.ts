@@ -16,6 +16,11 @@ export class ChatService {
   private lastUserQuestion: string = '';
   private lastUserMessage: ChatMessage | null = null;
   private pendingAction: string = '';
+  private selectedFAN: string = '';
+  private selectedBAN: string = '';
+  private selectedCompanyName: string = '';
+  private fanAttempts: number = 0;
+  private banAttempts: number = 0;
 
   constructor(private authService: AuthService) {}
 
@@ -412,6 +417,61 @@ export class ChatService {
         // This will be handled by the component to navigate to login
         break;
 
+      case 'provide_fan':
+        this.showFANInputForm();
+        break;
+
+      case 'submit_fan':
+        this.handleFANSubmission(data);
+        break;
+
+      case 'provide_ban':
+        this.showBANInputForm();
+        break;
+
+      case 'submit_ban':
+        this.handleBANSubmission(data);
+        break;
+
+      case 'show_ban_options':
+        this.showBANOptions();
+        break;
+
+      case 'select_fan_59285142':
+        this.selectFAN('59285142', 'INSPECTOR DRAIN INC');
+        break;
+
+      case 'select_fan_48392751':
+        this.selectFAN('48392751', 'TECH SOLUTIONS LLC');
+        break;
+
+      case 'select_fan_73641829':
+        this.selectFAN('73641829', 'GLOBAL SERVICES CORP');
+        break;
+
+      case 'select_ban_287301224446':
+        this.selectBAN('287301224446', 'Wireless Service');
+        break;
+
+      case 'select_ban_287301224447':
+        this.selectBAN('287301224447', 'Internet Service');
+        break;
+
+      case 'select_ban_148392751001':
+        this.selectBAN('148392751001', 'Wireless Service');
+        break;
+
+      case 'select_ban_148392751002':
+        this.selectBAN('148392751002', 'Fiber Service');
+        break;
+
+      case 'select_ban_273641829101':
+        this.selectBAN('273641829101', 'Business Wireless');
+        break;
+
+      case 'select_ban_273641829102':
+        this.selectBAN('273641829102', 'Business Internet');
+        break;
 
       case 'download_pdf':
         this.handleDownloadPdf();
@@ -665,34 +725,34 @@ export class ChatService {
 
   // Method to reinitialize chat after login
   reinitializeAfterLogin(): void {
-    // Only proceed if we haven't already reinitialized
-    if (this.pendingAction || this.lastUserMessage) {
-      // Add the "Great! Thanks for signing in" message with delay
-      setTimeout(() => {
-        this.addBotMessage({
-          type: 'text',
-          text: 'Great! Thanks for signing in.'
-        });
-        
-        // Add the user's last message back to the conversation
-        if (this.lastUserMessage) {
+    // Step 1: Immediately acknowledge sign-in
+    this.showSignedInStatus();
+    
+    // Step 2: After 700-900ms, add friendly acknowledgement
+    setTimeout(() => {
+      this.addBotMessage({
+        type: 'text',
+        text: 'Great — thanks for signing in! I\'ll pick up where we left off.'
+      });
+      
+      // Step 3: Re-insert user's last message if available
+      if (this.lastUserMessage) {
+        setTimeout(() => {
+          const currentMessages = this.messagesSubject.value;
+          this.messagesSubject.next([...currentMessages, this.lastUserMessage!]);
+          
+          // Step 4: Ask for account verification after 800ms
           setTimeout(() => {
-            const currentMessages = this.messagesSubject.value;
-            this.messagesSubject.next([...currentMessages, this.lastUserMessage!]);
-            
-            // Then respond to their original question with realistic delay
-            setTimeout(() => {
-              this.executeUserRequest();
-            }, 2500); // Increased to 2.5 seconds for more realistic response time
-          }, 1200); // Increased to 1.2 seconds before showing user message
-        } else {
-          // Fallback if no last message
-          setTimeout(() => {
-            this.executeUserRequest();
-          }, 1500);
-        }
-      }, 800); // Increased to 0.8 seconds before "Great! Thanks for signing in"
-    }
+            this.askForAccountVerification();
+          }, 800);
+        }, 600);
+      } else {
+        // No last message, go straight to account verification
+        setTimeout(() => {
+          this.askForAccountVerification();
+        }, 600);
+      }
+    }, 800);
   }
 
   // Add method to show signed in status
