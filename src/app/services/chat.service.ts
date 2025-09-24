@@ -417,29 +417,6 @@ export class ChatService {
         // This will be handled by the component to navigate to login
         break;
 
-      case 'show_fan_list':
-        this.showFANList();
-        break;
-
-      case 'show_fan_lookup_instructions':
-        this.showFANLookupInstructions();
-        break;
-
-      case 'show_ban_list':
-        this.showBANList();
-        break;
-
-      case 'escalate_find_ban':
-        this.escalateFindBAN();
-        break;
-
-      case 'cancel_verification':
-        this.cancelVerification();
-        break;
-
-      case 'contact_support':
-        this.contactSupport();
-        break;
 
       case 'download_pdf':
         this.handleDownloadPdf();
@@ -798,5 +775,10 @@ export class ChatService {
     this.pendingAction = '';
     this.lastUserMessage = null;
     this.lastUserQuestion = '';
+    this.selectedFAN = '';
+    this.selectedBAN = '';
+    this.selectedCompanyName = '';
+    this.fanAttempts = 0;
+    this.banAttempts = 0;
   }
 }

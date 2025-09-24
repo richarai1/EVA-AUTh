@@ -687,6 +687,96 @@ import { ChatMessage } from '../../models/chat.model';
       background: var(--primary-hover);
     }
 
+    /* Form Card Styles */
+    .form-card {
+      background: var(--background-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .form-header {
+      margin-bottom: 20px;
+    }
+
+    .form-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-color);
+      margin: 0 0 8px 0;
+    }
+
+    .form-text {
+      font-size: 14px;
+      color: var(--secondary-text);
+      margin: 0;
+    }
+
+    .chat-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-color);
+    }
+
+    .field-input {
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .field-input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
+    }
+
+    .form-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .form-button {
+      flex: 1;
+      padding: 10px 16px;
+      border: 1px solid var(--primary-color);
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: var(--background-color);
+      color: var(--primary-color);
+    }
+
+    .form-button:hover {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .form-button.primary-button {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .form-button.primary-button:hover {
+      background: var(--primary-hover);
+    }
+
     /* Enhanced Bill Analysis Styles */
     .bill-analysis-card {
       background: var(--background-color);
