@@ -78,9 +78,9 @@ export class HomeComponent implements OnInit {
           // Then reinitialize after login
           setTimeout(() => {
             this.chatService.reinitializeAfterLogin();
-          }, 500);
-        }, 500);
-      }, 1000);
+          }, 800); // Increased delay
+        }, 800); // Increased delay
+      }, 1200); // Increased initial delay
     } else {
       // For regular authenticated users, just open chat normally
       // The welcome header will show automatically

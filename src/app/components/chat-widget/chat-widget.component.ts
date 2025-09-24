@@ -1490,14 +1490,15 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
         const wasNotAuthenticated = !this.isAuthenticated;
         this.isAuthenticated = user.isAuthenticated;
         
-        if (user.isAuthenticated && this.isOpen && wasNotAuthenticated) {
+        // Only trigger sign-in flow if we're not already handling it via home component
+        if (user.isAuthenticated && this.isOpen && wasNotAuthenticated && !sessionStorage.getItem('reopenChatAfterLogin')) {
           // Add the signed in status message to chat
           this.chatService.showSignedInStatus();
           
           // Then reinitialize chat after a delay
           setTimeout(() => {
             this.chatService.reinitializeAfterLogin();
-          }, 1000);
+          }, 1500); // Increased delay
         }
       })
     );

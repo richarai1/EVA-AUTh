@@ -665,31 +665,34 @@ export class ChatService {
 
   // Method to reinitialize chat after login
   reinitializeAfterLogin(): void {
-    // Add the "Great! Thanks for signing in" message with delay
-    setTimeout(() => {
-      this.addBotMessage({
-        type: 'text',
-        text: 'Great! Thanks for signing in.'
-      });
-      
-      // Add the user's last message back to the conversation
-      if (this.lastUserMessage) {
-        setTimeout(() => {
-          const currentMessages = this.messagesSubject.value;
-          this.messagesSubject.next([...currentMessages, this.lastUserMessage!]);
-          
-          // Then respond to their original question with realistic delay
+    // Only proceed if we haven't already reinitialized
+    if (this.pendingAction || this.lastUserMessage) {
+      // Add the "Great! Thanks for signing in" message with delay
+      setTimeout(() => {
+        this.addBotMessage({
+          type: 'text',
+          text: 'Great! Thanks for signing in.'
+        });
+        
+        // Add the user's last message back to the conversation
+        if (this.lastUserMessage) {
+          setTimeout(() => {
+            const currentMessages = this.messagesSubject.value;
+            this.messagesSubject.next([...currentMessages, this.lastUserMessage!]);
+            
+            // Then respond to their original question with realistic delay
+            setTimeout(() => {
+              this.executeUserRequest();
+            }, 2500); // Increased to 2.5 seconds for more realistic response time
+          }, 1200); // Increased to 1.2 seconds before showing user message
+        } else {
+          // Fallback if no last message
           setTimeout(() => {
             this.executeUserRequest();
-          }, 1500); // 1.5 second delay for realistic response time
-        }, 800); // 0.8 second delay before showing user message
-      } else {
-        // Fallback if no last message
-        setTimeout(() => {
-          this.executeUserRequest();
-        }, 1000);
-      }
-    }, 500); // 0.5 second delay before "Great! Thanks for signing in"
+          }, 1500);
+        }
+      }, 800); // Increased to 0.8 seconds before "Great! Thanks for signing in"
+    }
   }
 
   // Add method to show signed in status
@@ -719,7 +722,8 @@ export class ChatService {
       
       setTimeout(() => {
         this.showBillAnalysis();
-      }, 2000);
+        this.clearPendingState();
+      }, 3000); // Increased to 3 seconds
     } else if (this.pendingAction === 'view_bill' || this.lastUserQuestion.toLowerCase().includes('view bill')) {
       this.addBotMessage({
         type: 'text',
@@ -728,18 +732,21 @@ export class ChatService {
       
       setTimeout(() => {
         this.showBillSummary();
-      }, 1800);
+        this.clearPendingState();
+      }, 2500); // Increased to 2.5 seconds
     } else if (this.pendingAction === 'download_bill' || this.lastUserQuestion.toLowerCase().includes('download')) {
       setTimeout(() => {
         this.handleDownloadPdf();
-      }, 1000);
+        this.clearPendingState();
+      }, 1500); // Increased to 1.5 seconds
     } else if (this.pendingAction === 'pay_bill' || this.lastUserQuestion.toLowerCase().includes('pay')) {
       setTimeout(() => {
         this.addBotMessage({
           type: 'text',
           text: "Please enter the amount you want to pay:"
         });
-      }, 1000);
+        this.clearPendingState();
+      }, 1500); // Increased to 1.5 seconds
     } else {
       // Default response with delay
       setTimeout(() => {
@@ -753,8 +760,15 @@ export class ChatService {
             { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
           ]
         });
-      }, 1000);
+        this.clearPendingState();
+      }, 1500); // Increased to 1.5 seconds
     }
+  }
+
+  // Clear pending state to prevent duplicate executions
+  private clearPendingState(): void {
     this.pendingAction = '';
+    this.lastUserMessage = null;
+    this.lastUserQuestion = '';
   }
 }
