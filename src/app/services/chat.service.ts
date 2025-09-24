@@ -390,6 +390,14 @@ export class ChatService {
         this.handleInternetService();
         break;
 
+      case 'service_wireless_authenticated':
+        this.handleWirelessServiceAuthenticated();
+        break;
+
+      case 'service_internet_authenticated':
+        this.handleInternetServiceAuthenticated();
+        break;
+
       case 'login':
         // This will be handled by the component to navigate to login
         break;
@@ -508,6 +516,44 @@ export class ChatService {
     }, 2000);
   }
 
+  private handleWirelessServiceAuthenticated(): void {
+    // Execute the pending action based on what the user originally asked
+    if (this.pendingAction === 'bill_analysis' || this.lastUserQuestion.toLowerCase().includes('bill') && this.lastUserQuestion.toLowerCase().includes('high')) {
+      this.showBillAnalysis();
+    } else if (this.pendingAction === 'view_bill') {
+      this.showBillSummary();
+    } else if (this.pendingAction === 'download_bill') {
+      this.handleDownloadPdf();
+    } else if (this.pendingAction === 'pay_bill') {
+      this.addBotMessage({
+        type: 'text',
+        text: "Please enter the amount you want to pay:"
+      });
+    } else {
+      // Default to bill analysis if no specific action
+      this.showBillAnalysis();
+    }
+    this.pendingAction = '';
+  }
+
+  private handleInternetServiceAuthenticated(): void {
+    this.addBotMessage({
+      type: 'text',
+      text: "OK, let me pull up your account info"
+    });
+    
+    setTimeout(() => {
+      this.addBotMessage({
+        type: 'text',
+        text: "It looks like your account is paid in full.\n\nDo you still want to make a payment?",
+        buttons: [
+          { text: "Yes", action: "confirm_payment", primary: true },
+          { text: "No", action: "cancel_payment" }
+        ]
+      });
+    }, 2000);
+    this.pendingAction = '';
+  }
 
   private handlePaymentAmount(amount: number): void {
     if (amount > 0) {
@@ -625,54 +671,32 @@ export class ChatService {
     const user = this.authService.currentUserValue;
     const userName = user.email.split('@')[0];
     
-    let welcomeText = `Great! Thanks for signing in, ${userName}.`;
-    
-    if (this.lastUserQuestion) {
-      welcomeText += `\n\nI see you were asking about: "${this.lastUserQuestion}"`;
-    }
+    // Add the "Great! Thanks for signing in" message
+    this.addBotMessage({
+      type: 'text',
+      text: 'Great! Thanks for signing in.\n\nSo I can get you the right info, what service are you asking about?',
+      buttons: [
+        { text: "AT&T Wireless", action: "service_wireless_authenticated", primary: true },
+        { text: "AT&T Internet", action: "service_internet_authenticated", primary: true }
+      ]
+    });
     
     // Execute pending action if any
     if (this.pendingAction) {
       switch (this.pendingAction) {
         case 'view_bill':
-          this.showBillSummary();
+          // Don't execute immediately, wait for service selection
           break;
         case 'bill_analysis':
-          this.showBillAnalysis();
+          // Don't execute immediately, wait for service selection
           break;
         case 'download_bill':
-          this.handleDownloadPdf();
+          // Don't execute immediately, wait for service selection
           break;
         case 'pay_bill':
-          this.addBotMessage({
-            type: 'text',
-            text: welcomeText + "\n\nPlease enter the amount you want to pay:"
-          });
+          // Don't execute immediately, wait for service selection
           break;
-        default:
-          this.addBotMessage({
-            type: 'text',
-            text: welcomeText + "\n\nHow can I help you?",
-            buttons: [
-              { text: "View Bill", action: "view_bill", primary: true },
-              { text: "Pay Bill", action: "pay_bill", primary: true },
-              { text: "Download Bill", action: "download_bill", primary: true },
-              { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
-            ]
-          });
       }
-      this.pendingAction = '';
-    } else {
-      this.addBotMessage({
-        type: 'text',
-        text: welcomeText + "\n\nHow can I help you?",
-        buttons: [
-          { text: "View Bill", action: "view_bill", primary: true },
-          { text: "Pay Bill", action: "pay_bill", primary: true },
-          { text: "Download Bill", action: "download_bill", primary: true },
-          { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
-        ]
-      });
     }
   }
 }

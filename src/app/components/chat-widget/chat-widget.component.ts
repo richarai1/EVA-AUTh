@@ -1461,7 +1461,10 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
         this.isAuthenticated = user.isAuthenticated;
         if (user.isAuthenticated && this.isOpen) {
           this.showSignedInStatus = true;
-          this.chatService.reinitializeAfterLogin();
+          // Show signed in status first, then reinitialize chat
+          setTimeout(() => {
+            this.chatService.reinitializeAfterLogin();
+          }, 500);
           setTimeout(() => {
             this.showSignedInStatus = false;
           }, 3000);
