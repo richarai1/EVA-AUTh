@@ -303,7 +303,13 @@ export class ChatService {
           ]
         },
         {
-          lineNumber: "Line number 214.555.0156",
+          lineNumber: "Line number 214.555.
+        }
+      ]
+    }
+    )
+  }
+}0156",
           name: "BUSINESS LINE 4",
           changeText: "Charges increased by $15.00",
           changeAmount: 15.00,
