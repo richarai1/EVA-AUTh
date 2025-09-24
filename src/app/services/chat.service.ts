@@ -378,110 +378,77 @@ export class ChatService {
       case 'help_shop':
         this.handleShoppingRequest();
         break;
-
+  
       case 'need_support':
         this.handleSupportRequest();
         break;
-
+  
       case 'view_bill':
         this.handleViewBillRequest();
         break;
-
+  
       case 'bill_analysis':
         this.handleBillAnalysisRequest();
         break;
-
+  
       case 'download_bill':
         this.handleDownloadBillRequest();
         break;
-
+  
       case 'pay_bill':
         this.handlePayBillRequest();
         break;
-
+  
       case 'service_wireless':
         this.handleWirelessService();
         break;
-
+  
       case 'service_internet':
         this.handleInternetService();
         break;
-
+  
       case 'service_wireless_authenticated':
         this.handleWirelessServiceAuthenticated();
         break;
-
+  
       case 'service_internet_authenticated':
         this.handleInternetServiceAuthenticated();
         break;
-
+  
       case 'login':
-        // This will be handled by the component to navigate to login
+        // Component handles navigation to login
         break;
-
-
+  
       case 'download_pdf':
         this.handleDownloadPdf();
         break;
-
+  
       case 'pay_bill_prompt':
-        this.addBotMessage({
-          type: 'text',
-          text: "How much do you want to pay? Feel free to enter a amount using only numbers."
-        });
-        break;
-
       case 'confirm_payment':
         this.addBotMessage({
           type: 'text',
-          text: "How much do you want to pay?\n\nFeel free to enter a amount using only numbers."
+          text: "Please enter the amount you want to pay using only numbers."
         });
         break;
-
+  
       case 'cancel_payment':
         this.addBotMessage({
           type: 'text',
           text: "No problem! Is there anything else I can help you with today?"
         });
         break;
-
+  
       case 'pay_with_visa':
       case 'pay_with_mastercard':
       case 'pay_with_discover':
       case 'pay_with_amex':
         this.showCardDetailsForm(action, data);
         break;
-
+  
       case 'submit_payment':
         this.processPayment(data);
         break;
-        case 'provide_fan':
-          this.showFANInputForm();
-          break;
-        
-        case 'submit_fan':
-          // This action is no longer used since we handle FAN input directly
-          this.addBotMessage({
-            type: 'text',
-            text: 'Please type your FAN number directly in the chat.'
-          });
-          break;
-        
-        case 'submit_ban':
-          // This action is no longer used since we handle BAN input directly
-          this.addBotMessage({
-            type: 'text',
-            text: 'Please type your BAN number directly in the chat.'
-          });
-          break;
-        
-        case 'show_fan_options':
-          this.addBotMessage({
-            type: 'text',
-            text: 'You can find your FAN and BAN on your AT&T account summary or bill statement.'
-          });
-          break;
-        
+  
       default:
         this.addBotMessage({
           type: 'text',
@@ -495,6 +462,7 @@ export class ChatService {
         });
     }
   }
+  
 
   private handleShoppingRequest(): void {
     this.addBotMessage({
@@ -879,95 +847,41 @@ export class ChatService {
     this.banAttempts = 0;
   }
 
-  private handleFANInput(fanInput: string): void {
-    this.waitingForFAN = false;
-    
-    // Validate FAN (should be 8 digits)
+  public handleFANInput(fanInput: string): void {
+    // Validate FAN (8 digits)
     if (!/^\d{8}$/.test(fanInput)) {
-      this.fanAttempts++;
-      
-      if (this.fanAttempts >= 3) {
-        this.addBotMessage({
-          type: 'text',
-          text: "I'm having trouble with the FAN verification. Let me connect you with support for assistance.",
-          buttons: [
-            { text: "Contact Support", action: "contact_support", primary: true },
-            { text: "Try Again", action: "provide_fan" }
-          ]
-        });
-        return;
-      }
-      
       this.addBotMessage({
         type: 'text',
-        text: `Please enter a valid 8-digit FAN number. You have ${3 - this.fanAttempts} attempts remaining.`
+        text: 'Please enter a valid 8-digit FAN number.'
       });
-      
-      setTimeout(() => {
-        this.showFANInputForm();
-      }, 600);
       return;
     }
-    
-    // Valid FAN - process it
+  
     this.selectedFAN = fanInput;
-    this.fanAttempts = 0;
-    
-    // Map FAN to company name (you can expand this mapping)
-    const companyMapping: { [key: string]: string } = {
-      '59285142': 'INSPECTOR DRAIN INC'
-    };
-    
-    this.selectedCompanyName = companyMapping[fanInput] || 'Your Company';
-    
+  
     this.addBotMessage({
       type: 'text',
-      text: `Great! I found your account for ${this.selectedCompanyName}. Now I need your Billing Account Number (BAN).`,
-      buttons: [
-        { text: "I know my BAN", action: "provide_ban", primary: true },
-        { text: "I don't know my BAN", action: "show_ban_options" }
-      ]
+      text: `Great! Now please type your Billing Account Number (BAN) directly in the chat.`
     });
   }
+  
 
-  private handleBANInput(banInput: string): void {
-    this.waitingForBAN = false;
-    
-    // Validate BAN (should be 12 digits)
+  public handleBANInput(banInput: string): void {
+    // Validate BAN (12 digits)
     if (!/^\d{12}$/.test(banInput)) {
-      this.banAttempts++;
-      
-      if (this.banAttempts >= 3) {
-        this.addBotMessage({
-          type: 'text',
-          text: "I'm having trouble with the BAN verification. Let me connect you with support for assistance.",
-          buttons: [
-            { text: "Contact Support", action: "contact_support", primary: true },
-            { text: "Try Again", action: "provide_ban" }
-          ]
-        });
-        return;
-      }
-      
       this.addBotMessage({
         type: 'text',
-        text: `Please enter a valid 12-digit BAN number. You have ${3 - this.banAttempts} attempts remaining.`
+        text: 'Please enter a valid 12-digit BAN number.'
       });
-      
-      setTimeout(() => {
-        this.showBANInputForm();
-      }, 600);
       return;
     }
-    
-    // Valid BAN - process it
+  
     this.selectedBAN = banInput;
-    this.banAttempts = 0;
-    
-    // Show confirmation and proceed
+  
+    // Confirm account and resume actions
     this.addBotMessage({
       type: 'text',
-      text: `Perfect! I've verified your account:\nFAN: ${this.selectedFAN}\nBAN: ${this.selectedBAN}\nCompany: ${this.selectedCompanyName}\n\nWhat would you like to do?`,
+      text: `Perfect! I've verified your account:\nFAN: ${this.selectedFAN}\nBAN: ${this.selectedBAN}\nCompany: ${this.selectedCompanyName || 'Your Company'}\n\nWhat would you like to do?`,
       buttons: [
         { text: "View Bill", action: "view_bill", primary: true },
         { text: "Pay Bill", action: "pay_bill", primary: true },
@@ -976,4 +890,5 @@ export class ChatService {
       ]
     });
   }
+  
 }
