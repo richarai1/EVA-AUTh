@@ -526,23 +526,7 @@ export class ChatService {
   }
 
   private handleWirelessServiceAuthenticated(): void {
-    // Execute the pending action based on what the user originally asked
-    if (this.pendingAction === 'bill_analysis' || this.lastUserQuestion.toLowerCase().includes('bill') && this.lastUserQuestion.toLowerCase().includes('high')) {
-      this.showBillAnalysis();
-    } else if (this.pendingAction === 'view_bill') {
-      this.showBillSummary();
-    } else if (this.pendingAction === 'download_bill') {
-      this.handleDownloadPdf();
-    } else if (this.pendingAction === 'pay_bill') {
-      this.addBotMessage({
-        type: 'text',
-        text: "Please enter the amount you want to pay:"
-      });
-    } else {
-      // Default to bill analysis if no specific action
-      this.showBillAnalysis();
-    }
-    this.pendingAction = '';
+    this.executeUserRequest();
   }
 
   private handleInternetServiceAuthenticated(): void {
@@ -683,16 +667,9 @@ export class ChatService {
       text: 'Great! Thanks for signing in.'
     });
     
-    // Then ask about service
+    // Then execute the pending action based on what the user originally asked
     setTimeout(() => {
-      this.addBotMessage({
-        type: 'text',
-        text: 'So I can get you the right info, what service are you asking about?',
-        buttons: [
-          { text: "AT&T Wireless", action: "service_wireless_authenticated", primary: true },
-          { text: "AT&T Internet", action: "service_internet_authenticated", primary: true }
-        ]
-      });
+      this.executeUserRequest();
     }, 500);
   }
 
@@ -710,5 +687,34 @@ export class ChatService {
 
     const currentMessages = this.messagesSubject.value;
     this.messagesSubject.next([...currentMessages, statusMessage]);
+  }
+
+  // Execute the user's original request after sign-in
+  private executeUserRequest(): void {
+    if (this.pendingAction === 'bill_analysis' || this.lastUserQuestion.toLowerCase().includes('bill') && this.lastUserQuestion.toLowerCase().includes('high')) {
+      this.showBillAnalysis();
+    } else if (this.pendingAction === 'view_bill') {
+      this.showBillSummary();
+    } else if (this.pendingAction === 'download_bill') {
+      this.handleDownloadPdf();
+    } else if (this.pendingAction === 'pay_bill') {
+      this.addBotMessage({
+        type: 'text',
+        text: "Please enter the amount you want to pay:"
+      });
+    } else {
+      // Default response if no specific action
+      this.addBotMessage({
+        type: 'text',
+        text: "How can I help you today?",
+        buttons: [
+          { text: "View Bill", action: "view_bill", primary: true },
+          { text: "Pay Bill", action: "pay_bill", primary: true },
+          { text: "Download Bill", action: "download_bill", primary: true },
+          { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
+        ]
+      });
+    }
+    this.pendingAction = '';
   }
 }
