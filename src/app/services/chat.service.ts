@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { AuthService } from './auth.service';
-import { ChatMessage, ChatCard, BillSummaryData } from '../models/chat.model';
+import { ChatMessage, ChatCard, BillSummaryData, BanOption } from '../models/chat.model';
 
 @Injectable({
   providedIn: 'root'
