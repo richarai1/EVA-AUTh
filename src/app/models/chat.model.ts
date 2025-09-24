@@ -16,6 +16,7 @@ export interface ChatCard {
   billData?: BillSummaryData;
   billBreakdown?: BillBreakdownItem[];
   options?: OptionCard[];
+  accountOptions?: AccountOption[];
   currentTotal?: string;
   previousTotal?: string;
   totalIncrease?: string;
@@ -56,6 +57,19 @@ export interface OptionCard {
   title: string;
   description: string;
   iconUrl: string;
+  action: string;
+}
+
+export interface AccountOption {
+  fanNumber: string;
+  companyName: string;
+  banNumbers: BanOption[];
+  action: string;
+}
+
+export interface BanOption {
+  banNumber: string;
+  serviceType: string;
   action: string;
 }
 

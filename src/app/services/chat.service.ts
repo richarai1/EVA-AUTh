@@ -16,6 +16,9 @@ export class ChatService {
   private lastUserQuestion: string = '';
   private lastUserMessage: ChatMessage | null = null;
   private pendingAction: string = '';
+  private selectedFAN: string = '';
+  private selectedBAN: string = '';
+  private selectedCompanyName: string = '';
 
   constructor(private authService: AuthService) {}
 
@@ -336,13 +339,13 @@ export class ChatService {
 
   private showBillSummary(): void {
     const billData: BillSummaryData = {
-      companyName: "INSPECTOR DRAIN INC",
-      companyAddress: "5834 BETHELVIEW RD\nCUMMING, GA 30040-6312",
+      companyName: this.selectedCompanyName || "INSPECTOR DRAIN INC",
+      companyAddress: this.getCompanyAddress(),
       pageInfo: "",
       issueDate: "Sep 15, 2025",
-      accountNumber: "287301224446",
-      foundationAccount: "59285142",
-      invoice: "287301224446X10092023",
+      accountNumber: this.selectedBAN || "287301224446",
+      foundationAccount: this.selectedFAN || "59285142",
+      invoice: `${this.selectedBAN || "287301224446"}X10092023`,
       totalDue: 6142.25,
       dueDate: "Sep 15, 2025",
       lastBill: 9466.04,
@@ -364,6 +367,19 @@ export class ChatService {
         { text: "Pay Bill", action: "pay_bill_prompt" }
       ]
     });
+  }
+
+  private getCompanyAddress(): string {
+    switch (this.selectedFAN) {
+      case '59285142':
+        return "5834 BETHELVIEW RD\nCUMMING, GA 30040-6312";
+      case '48392751':
+        return "1234 TECH BLVD\nAUSTIN, TX 78701-1234";
+      case '73641829':
+        return "5678 GLOBAL WAY\nSEATTLE, WA 98101-5678";
+      default:
+        return "5834 BETHELVIEW RD\nCUMMING, GA 30040-6312";
+    }
   }
 
   handleButtonClick(action: string, data?: any): void {
@@ -390,6 +406,72 @@ export class ChatService {
 
       case 'pay_bill':
         this.handlePayBillRequest();
+        break;
+
+      case 'provide_fan':
+        this.addBotMessage({
+          type: 'form',
+          title: 'Foundation Account Number',
+          text: 'Please enter your Foundation Account Number (FAN):',
+          formFields: [
+            { label: "Foundation Account Number", type: "text", name: "fanNumber", placeholder: "Enter your FAN" }
+          ],
+          buttons: [
+            { text: "Submit", action: "submit_fan", primary: true }
+          ]
+        });
+        break;
+
+      case 'show_fan_options':
+        this.showFANOptions();
+        break;
+
+      case 'select_fan_59285142':
+        this.selectedFAN = '59285142';
+        this.selectedCompanyName = 'INSPECTOR DRAIN INC';
+        this.showBANOptions('59285142', 'INSPECTOR DRAIN INC');
+        break;
+
+      case 'select_fan_48392751':
+        this.selectedFAN = '48392751';
+        this.selectedCompanyName = 'TECH SOLUTIONS LLC';
+        this.showBANOptions('48392751', 'TECH SOLUTIONS LLC');
+        break;
+
+      case 'select_fan_73641829':
+        this.selectedFAN = '73641829';
+        this.selectedCompanyName = 'GLOBAL SERVICES CORP';
+        this.showBANOptions('73641829', 'GLOBAL SERVICES CORP');
+        break;
+
+      case 'select_ban_287301224446':
+        this.selectedBAN = '287301224446';
+        this.proceedWithOriginalRequest();
+        break;
+
+      case 'select_ban_287301224447':
+        this.selectedBAN = '287301224447';
+        this.proceedWithOriginalRequest();
+        break;
+
+      case 'select_ban_148392751001':
+        this.selectedBAN = '148392751001';
+        this.proceedWithOriginalRequest();
+        break;
+
+      case 'select_ban_148392751002':
+        this.selectedBAN = '148392751002';
+        this.proceedWithOriginalRequest();
+        break;
+
+      case 'select_ban_273641829101':
+        this.selectedBAN = '273641829101';
+        this.proceedWithOriginalRequest();
+        break;
+
+      case 'select_ban_273641829102':
+        this.selectedBAN = '273641829102';
+        this.proceedWithOriginalRequest();
         break;
 
       case 'service_wireless':
@@ -713,56 +795,137 @@ export class ChatService {
 
   // Execute the user's original request after sign-in
   private executeUserRequest(): void {
-    if (this.pendingAction === 'bill_analysis' || this.lastUserQuestion.toLowerCase().includes('bill') && this.lastUserQuestion.toLowerCase().includes('high')) {
-      // Add typing indicator delay for bill analysis
-      this.addBotMessage({
-        type: 'text',
-        text: 'Let me analyze your bill for you...'
-      });
-      
-      setTimeout(() => {
-        this.showBillAnalysis();
-        this.clearPendingState();
-      }, 3000); // Increased to 3 seconds
-    } else if (this.pendingAction === 'view_bill' || this.lastUserQuestion.toLowerCase().includes('view bill')) {
-      this.addBotMessage({
-        type: 'text',
-        text: 'Let me pull up your bill summary...'
-      });
-      
-      setTimeout(() => {
-        this.showBillSummary();
-        this.clearPendingState();
-      }, 2500); // Increased to 2.5 seconds
-    } else if (this.pendingAction === 'download_bill' || this.lastUserQuestion.toLowerCase().includes('download')) {
-      setTimeout(() => {
-        this.handleDownloadPdf();
-        this.clearPendingState();
-      }, 1500); // Increased to 1.5 seconds
-    } else if (this.pendingAction === 'pay_bill' || this.lastUserQuestion.toLowerCase().includes('pay')) {
-      setTimeout(() => {
-        this.addBotMessage({
-          type: 'text',
-          text: "Please enter the amount you want to pay:"
-        });
-        this.clearPendingState();
-      }, 1500); // Increased to 1.5 seconds
-    } else {
-      // Default response with delay
-      setTimeout(() => {
-        this.addBotMessage({
-          type: 'text',
-          text: "How can I help you today?",
-          buttons: [
-            { text: "View Bill", action: "view_bill", primary: true },
-            { text: "Pay Bill", action: "pay_bill", primary: true },
-            { text: "Download Bill", action: "download_bill", primary: true },
-            { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
-          ]
-        });
-        this.clearPendingState();
-      }, 1500); // Increased to 1.5 seconds
+    // First ask for account verification
+    setTimeout(() => {
+      this.askForAccountVerification();
+    }, 1500);
+  }
+
+  private askForAccountVerification(): void {
+    this.addBotMessage({
+      type: 'text',
+      text: 'To help you with your request, I need to verify your account information. Please provide your Foundation Account Number (FAN).',
+      buttons: [
+        { text: "I know my FAN", action: "provide_fan", primary: true },
+        { text: "I don't know my FAN", action: "show_fan_options", primary: false }
+      ]
+    });
+  }
+
+  private showFANOptions(): void {
+    this.addBotMessage({
+      type: 'option-cards',
+      text: 'Please select your Foundation Account Number from the options below:',
+      accountOptions: [
+        {
+          fanNumber: '59285142',
+          companyName: 'INSPECTOR DRAIN INC',
+          banNumbers: [],
+          action: 'select_fan_59285142'
+        },
+        {
+          fanNumber: '48392751',
+          companyName: 'TECH SOLUTIONS LLC',
+          banNumbers: [],
+          action: 'select_fan_48392751'
+        },
+        {
+          fanNumber: '73641829',
+          companyName: 'GLOBAL SERVICES CORP',
+          banNumbers: [],
+          action: 'select_fan_73641829'
+        }
+      ]
+    });
+  }
+
+  private showBANOptions(fanNumber: string, companyName: string): void {
+    let banOptions: BanOption[] = [];
+    
+    if (fanNumber === '59285142') {
+      banOptions = [
+        { banNumber: '287301224446', serviceType: 'Wireless Service', action: 'select_ban_287301224446' },
+        { banNumber: '287301224447', serviceType: 'Internet Service', action: 'select_ban_287301224447' }
+      ];
+    } else if (fanNumber === '48392751') {
+      banOptions = [
+        { banNumber: '148392751001', serviceType: 'Wireless Service', action: 'select_ban_148392751001' },
+        { banNumber: '148392751002', serviceType: 'Fiber Internet', action: 'select_ban_148392751002' }
+      ];
+    } else if (fanNumber === '73641829') {
+      banOptions = [
+        { banNumber: '273641829101', serviceType: 'Business Wireless', action: 'select_ban_273641829101' },
+        { banNumber: '273641829102', serviceType: 'Business Internet', action: 'select_ban_273641829102' }
+      ];
     }
+
+    this.addBotMessage({
+      type: 'text',
+      text: `Great! I found your account for ${companyName}. Now please select your Billing Account Number (BAN):`,
+      buttons: banOptions.map(ban => ({
+        text: `${ban.banNumber} (${ban.serviceType})`,
+        action: ban.action,
+        primary: true
+      }))
+    });
+  }
+
+  private proceedWithOriginalRequest(): void {
+    this.addBotMessage({
+      type: 'text',
+      text: `Perfect! I've verified your account for ${this.selectedCompanyName}. Let me help you with your request.`
+    });
+
+    setTimeout(() => {
+      if (this.pendingAction === 'bill_analysis' || this.lastUserQuestion.toLowerCase().includes('bill') && this.lastUserQuestion.toLowerCase().includes('high')) {
+        this.addBotMessage({
+          type: 'text',
+          text: 'Let me analyze your bill for you...'
+        });
+        
+        setTimeout(() => {
+          this.showBillAnalysis();
+          this.clearPendingState();
+        }, 3000);
+      } else if (this.pendingAction === 'view_bill' || this.lastUserQuestion.toLowerCase().includes('view bill')) {
+        this.addBotMessage({
+          type: 'text',
+          text: 'Let me pull up your bill summary...'
+        });
+        
+        setTimeout(() => {
+          this.showBillSummary();
+          this.clearPendingState();
+        }, 2500);
+      } else if (this.pendingAction === 'download_bill' || this.lastUserQuestion.toLowerCase().includes('download')) {
+        setTimeout(() => {
+          this.handleDownloadPdf();
+          this.clearPendingState();
+        }, 1500);
+      } else if (this.pendingAction === 'pay_bill' || this.lastUserQuestion.toLowerCase().includes('pay')) {
+        setTimeout(() => {
+          this.addBotMessage({
+            type: 'text',
+            text: "Please enter the amount you want to pay:"
+          });
+          this.clearPendingState();
+        }, 1500);
+      } else {
+        setTimeout(() => {
+          this.addBotMessage({
+            type: 'text',
+            text: "How can I help you today?",
+            buttons: [
+              { text: "View Bill", action: "view_bill", primary: true },
+              { text: "Pay Bill", action: "pay_bill", primary: true },
+              { text: "Download Bill", action: "download_bill", primary: true },
+              { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
+            ]
+          });
+          this.clearPendingState();
+        }, 1500);
+      }
+    }, 2000);
   }
 
   // Clear pending state to prevent duplicate executions
@@ -770,5 +933,8 @@ export class ChatService {
     this.pendingAction = '';
     this.lastUserMessage = null;
     this.lastUserQuestion = '';
+    this.selectedFAN = '';
+    this.selectedBAN = '';
+    this.selectedCompanyName = '';
   }
 }
