@@ -417,6 +417,29 @@ export class ChatService {
         // This will be handled by the component to navigate to login
         break;
 
+      case 'show_fan_list':
+        this.showFANList();
+        break;
+
+      case 'show_fan_lookup_instructions':
+        this.showFANLookupInstructions();
+        break;
+
+      case 'show_ban_list':
+        this.showBANList();
+        break;
+
+      case 'escalate_find_ban':
+        this.escalateFindBAN();
+        break;
+
+      case 'cancel_verification':
+        this.cancelVerification();
+        break;
+
+      case 'contact_support':
+        this.contactSupport();
+        break;
 
       case 'download_pdf':
         this.handleDownloadPdf();
@@ -714,302 +737,6 @@ export class ChatService {
 
     const currentMessages = this.messagesSubject.value;
     this.messagesSubject.next([...currentMessages, statusMessage]);
-  }
-
-  private askForAccountVerification(): void {
-    this.addBotMessage({
-      type: 'text',
-      text: "To help you with your account, I'll need to verify some information. Please provide your Foundation Account Number (FAN):",
-      buttons: [
-        { text: "I know my FAN", action: "provide_fan", primary: true },
-        { text: "I don't know my FAN", action: "show_fan_options" }
-      ]
-    });
-  }
-
-  private showFANOptions(): void {
-    // Show instruction card first
-    this.addBotMessage({
-      type: 'text',
-      text: "The FAN is a number tied to your company account. You can find it on your bill PDF (top right/Account details) or on the Account Summary page in the portal.",
-      buttons: [
-        { text: "Show my FAN options", action: "show_fan_list", primary: true },
-        { text: "Help me find it on a bill", action: "show_fan_lookup_instructions" }
-      ]
-    });
-  }
-
-  private showFANList(): void {
-    this.addBotMessage({
-      type: 'option-cards',
-      accountOptions: [
-        {
-          fanNumber: "59285142",
-          companyName: "INSPECTOR DRAIN INC",
-          action: "select_fan_59285142"
-        },
-        {
-          fanNumber: "48392751",
-          companyName: "TECH SOLUTIONS LLC",
-          action: "select_fan_48392751"
-        },
-        {
-          fanNumber: "73641829",
-          companyName: "GLOBAL SERVICES CORP",
-          action: "select_fan_73641829"
-        }
-      ]
-    });
-  }
-
-  private selectFAN(fan: string, companyName: string): void {
-    this.selectedFAN = fan;
-    this.selectedCompanyName = companyName;
-    
-    // Show confirmation and ask for BAN
-    setTimeout(() => {
-      this.addBotMessage({
-        type: 'text',
-        text: `Thanks — I found your FAN. Now please provide your Billing Account Number (BAN).`,
-        buttons: [
-          { text: "I know my BAN", action: "provide_ban", primary: true },
-          { text: "I don't know my BAN", action: "show_ban_options" }
-        ]
-      });
-    }, 800);
-  }
-
-  private showFANInputForm(): void {
-    this.addBotMessage({
-      type: 'form',
-      title: 'Foundation Account Number',
-      text: 'Please enter your Foundation Account Number (FAN):',
-      formFields: [
-        { 
-          label: 'FAN Number', 
-          type: 'text', 
-          name: 'fanNumber', 
-          placeholder: 'Enter 8-digit FAN' 
-        }
-      ],
-      buttons: [
-        { text: 'Submit', action: 'submit_fan', primary: true },
-        { text: 'Cancel', action: 'cancel_verification' }
-      ]
-    });
-  }
-
-  private handleFANSubmission(data: any): void {
-    const fanNumber = data?.fanNumber?.trim();
-    
-    if (!fanNumber || !/^\d{8}$/.test(fanNumber)) {
-      this.fanAttempts++;
-      
-      if (this.fanAttempts >= 3) {
-        this.addBotMessage({
-          type: 'text',
-          text: "I'm having trouble with that FAN. Would you like me to show you some options or connect you with support?",
-          buttons: [
-            { text: "Show FAN options", action: "show_fan_options", primary: true },
-            { text: "Contact Support", action: "contact_support" }
-          ]
-        });
-        return;
-      }
-      
-      this.addBotMessage({
-        type: 'text',
-        text: "Please enter a valid 8-digit Foundation Account Number.",
-        buttons: [
-          { text: "Try again", action: "provide_fan", primary: true },
-          { text: "I don't know my FAN", action: "show_fan_options" }
-        ]
-      });
-      return;
-    }
-
-    // Map FAN to company (in real app, this would be a database lookup)
-    const fanMapping: { [key: string]: string } = {
-      '59285142': 'INSPECTOR DRAIN INC',
-      '48392751': 'TECH SOLUTIONS LLC',
-      '73641829': 'GLOBAL SERVICES CORP'
-    };
-
-    const companyName = fanMapping[fanNumber];
-    if (!companyName) {
-      this.addBotMessage({
-        type: 'text',
-        text: "I couldn't find an account with that FAN. Please check the number and try again.",
-        buttons: [
-          { text: "Try again", action: "provide_fan", primary: true },
-          { text: "Show FAN options", action: "show_fan_options" }
-        ]
-      });
-      return;
-    }
-
-    this.selectFAN(fanNumber, companyName);
-  }
-
-  private showBANOptions(): void {
-    if (!this.selectedFAN) {
-      this.addBotMessage({
-        type: 'text',
-        text: "Please select a FAN first."
-      });
-      return;
-    }
-
-    // Show instruction card first
-    this.addBotMessage({
-      type: 'text',
-      text: "The BAN is the billing account ID shown on the first page of your bill PDF under Billing Account Number or on Account Details.",
-      buttons: [
-        { text: "Show BAN options", action: "show_ban_list", primary: true },
-        { text: "Get help", action: "escalate_find_ban" }
-      ]
-    });
-  }
-
-  private showBANList(): void {
-    if (!this.selectedFAN) {
-      this.addBotMessage({
-        type: 'text',
-        text: "Please select a FAN first."
-      });
-      return;
-    }
-
-    let banOptions: BanOption[] = [];
-    
-    // Mock BAN options based on selected FAN
-    if (this.selectedFAN === '59285142') {
-      banOptions = [
-        { banNumber: '287301224446', serviceType: 'Wireless Service', action: 'select_ban_287301224446' },
-        { banNumber: '287301224447', serviceType: 'Internet Service', action: 'select_ban_287301224447' }
-      ];
-    } else if (this.selectedFAN === '48392751') {
-      banOptions = [
-        { banNumber: '148392751001', serviceType: 'Wireless Service', action: 'select_ban_148392751001' },
-        { banNumber: '148392751002', serviceType: 'Fiber Service', action: 'select_ban_148392751002' }
-      ];
-    } else if (this.selectedFAN === '73641829') {
-      banOptions = [
-        { banNumber: '273641829101', serviceType: 'Business Wireless', action: 'select_ban_273641829101' },
-        { banNumber: '273641829102', serviceType: 'Business Internet', action: 'select_ban_273641829102' }
-      ];
-    }
-
-    this.addBotMessage({
-      type: 'ban-options',
-      banOptions: banOptions
-    });
-  }
-
-  private selectBAN(ban: string, serviceType: string): void {
-    this.selectedBAN = ban;
-    
-    // Show confirmation
-    setTimeout(() => {
-      this.addBotMessage({
-        type: 'text',
-        text: `Thanks — I have your account: FAN: ${this.selectedFAN}, BAN: ${this.selectedBAN} (Company: ${this.selectedCompanyName}). What would you like to do next?`,
-        buttons: [
-          { text: "View Bill", action: "view_bill", primary: true },
-          { text: "Pay Bill", action: "pay_bill", primary: true },
-          { text: "Download Bill", action: "download_bill", primary: true },
-          { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
-        ]
-      });
-    }, 600);
-  }
-
-  private showBANInputForm(): void {
-    this.addBotMessage({
-      type: 'form',
-      title: 'Billing Account Number',
-      text: 'Please enter your Billing Account Number (BAN):',
-      formFields: [
-        { 
-          label: 'BAN Number', 
-          type: 'text', 
-          name: 'banNumber', 
-          placeholder: 'Enter 12-digit BAN' 
-        }
-      ],
-      buttons: [
-        { text: 'Submit', action: 'submit_ban', primary: true },
-        { text: 'Cancel', action: 'cancel_verification' }
-      ]
-    });
-  }
-
-  private handleBANSubmission(data: any): void {
-    const banNumber = data?.banNumber?.trim();
-    
-    if (!banNumber || !/^\d{12}$/.test(banNumber)) {
-      this.banAttempts++;
-      
-      if (this.banAttempts >= 3) {
-        this.addBotMessage({
-          type: 'text',
-          text: "I'm having trouble with that BAN. Would you like me to show you some options or connect you with support?",
-          buttons: [
-            { text: "Show BAN options", action: "show_ban_options", primary: true },
-            { text: "Contact Support", action: "contact_support" }
-          ]
-        });
-        return;
-      }
-      
-      this.addBotMessage({
-        type: 'text',
-        text: "Please enter a valid 12-digit Billing Account Number.",
-        buttons: [
-          { text: "Try again", action: "provide_ban", primary: true },
-          { text: "I don't know my BAN", action: "show_ban_options" }
-        ]
-      });
-      return;
-    }
-
-    // Validate BAN exists for the selected FAN
-    const validBANs = this.getValidBANsForFAN(this.selectedFAN);
-    const banExists = validBANs.some(ban => ban.banNumber === banNumber);
-    
-    if (!banExists) {
-      this.addBotMessage({
-        type: 'text',
-        text: "I couldn't find that BAN for your account. Please check the number and try again.",
-        buttons: [
-          { text: "Try again", action: "provide_ban", primary: true },
-          { text: "Show BAN options", action: "show_ban_options" }
-        ]
-      });
-      return;
-    }
-
-    const serviceType = validBANs.find(ban => ban.banNumber === banNumber)?.serviceType || 'Service';
-    this.selectBAN(banNumber, serviceType);
-  }
-
-  private getValidBANsForFAN(fan: string): BanOption[] {
-    const banMapping: { [key: string]: BanOption[] } = {
-      '59285142': [
-        { banNumber: '287301224446', serviceType: 'Wireless Service', action: 'select_ban_287301224446' },
-        { banNumber: '287301224447', serviceType: 'Internet Service', action: 'select_ban_287301224447' }
-      ],
-      '48392751': [
-        { banNumber: '148392751001', serviceType: 'Wireless Service', action: 'select_ban_148392751001' },
-        { banNumber: '148392751002', serviceType: 'Fiber Service', action: 'select_ban_148392751002' }
-      ],
-      '73641829': [
-        { banNumber: '273641829101', serviceType: 'Business Wireless', action: 'select_ban_273641829101' },
-        { banNumber: '273641829102', serviceType: 'Business Internet', action: 'select_ban_273641829102' }
-      ]
-    };
-    
-    return banMapping[fan] || [];
   }
 
   // Execute the user's original request after sign-in
