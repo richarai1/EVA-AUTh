@@ -39,7 +39,7 @@ import { ChatMessage } from '../../models/chat.model';
 
       <!-- Welcome Header (only shown for authenticated users at start) -->
       <div *ngIf="showWelcomeHeader && isAuthenticated" class="welcome-header">
-        <h2 class="welcome-title">Welcome br>INSPECTOR DRAIN INC</h2>
+        <h2 class="welcome-title">Welcome x`br>INSPECTOR DRAIN INC</h2>
         <p class="welcome-time">{{ getCurrentTime() }}</p>
       </div>
 
