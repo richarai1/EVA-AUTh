@@ -885,7 +885,107 @@ export class ChatService {
     this.selectedFAN = '';
     this.selectedBAN = '';
     this.selectedCompanyName = '';
+    this.waitingForFAN = false;
+    this.waitingForBAN = false;
     this.fanAttempts = 0;
     this.banAttempts = 0;
+  }
+
+  private handleFANInput(fanInput: string): void {
+    this.waitingForFAN = false;
+    
+    // Validate FAN (should be 8 digits)
+    if (!/^\d{8}$/.test(fanInput)) {
+      this.fanAttempts++;
+      
+      if (this.fanAttempts >= 3) {
+        this.addBotMessage({
+          type: 'text',
+          text: "I'm having trouble with the FAN verification. Let me connect you with support for assistance.",
+          buttons: [
+            { text: "Contact Support", action: "contact_support", primary: true },
+            { text: "Try Again", action: "provide_fan" }
+          ]
+        });
+        return;
+      }
+      
+      this.addBotMessage({
+        type: 'text',
+        text: `Please enter a valid 8-digit FAN number. You have ${3 - this.fanAttempts} attempts remaining.`
+      });
+      
+      setTimeout(() => {
+        this.showFANInputForm();
+      }, 600);
+      return;
+    }
+    
+    // Valid FAN - process it
+    this.selectedFAN = fanInput;
+    this.fanAttempts = 0;
+    
+    // Map FAN to company name (you can expand this mapping)
+    const companyMapping: { [key: string]: string } = {
+      '59285142': 'INSPECTOR DRAIN INC'
+    };
+    
+    this.selectedCompanyName = companyMapping[fanInput] || 'Your Company';
+    
+    this.addBotMessage({
+      type: 'text',
+      text: `Great! I found your account for ${this.selectedCompanyName}. Now I need your Billing Account Number (BAN).`,
+      buttons: [
+        { text: "I know my BAN", action: "provide_ban", primary: true },
+        { text: "I don't know my BAN", action: "show_ban_options" }
+      ]
+    });
+  }
+
+  private handleBANInput(banInput: string): void {
+    this.waitingForBAN = false;
+    
+    // Validate BAN (should be 12 digits)
+    if (!/^\d{12}$/.test(banInput)) {
+      this.banAttempts++;
+      
+      if (this.banAttempts >= 3) {
+        this.addBotMessage({
+          type: 'text',
+          text: "I'm having trouble with the BAN verification. Let me connect you with support for assistance.",
+          buttons: [
+            { text: "Contact Support", action: "contact_support", primary: true },
+            { text: "Try Again", action: "provide_ban" }
+          ]
+        });
+        return;
+      }
+      
+      this.addBotMessage({
+        type: 'text',
+        text: `Please enter a valid 12-digit BAN number. You have ${3 - this.banAttempts} attempts remaining.`
+      });
+      
+      setTimeout(() => {
+        this.showBANInputForm();
+      }, 600);
+      return;
+    }
+    
+    // Valid BAN - process it
+    this.selectedBAN = banInput;
+    this.banAttempts = 0;
+    
+    // Show confirmation and proceed
+    this.addBotMessage({
+      type: 'text',
+      text: `Perfect! I've verified your account:\nFAN: ${this.selectedFAN}\nBAN: ${this.selectedBAN}\nCompany: ${this.selectedCompanyName}\n\nWhat would you like to do?`,
+      buttons: [
+        { text: "View Bill", action: "view_bill", primary: true },
+        { text: "Pay Bill", action: "pay_bill", primary: true },
+        { text: "Download Bill", action: "download_bill", primary: true },
+        { text: "Bill Analysis", action: "bill_analysis", primary: true }
+      ]
+    });
   }
 }
