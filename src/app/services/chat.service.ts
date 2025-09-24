@@ -15,6 +15,7 @@ export class ChatService {
 
   private lastUserQuestion: string = '';
   private pendingAction: string = '';
+
   constructor(private authService: AuthService) {}
 
   openChat(): void {
@@ -37,37 +38,74 @@ export class ChatService {
   }
 
   private initializeGuestChat(): void {
-    const welcomeMessage: ChatMessage = {
+    // Show business security notice first
+    const securityMessage: ChatMessage = {
       id: this.generateId(),
       isUser: false,
       timestamp: new Date(),
       card: {
-        type: 'text',
-        text: "Hi there! Let's get you some help. Please select an option so I can connect you.",
-       
-    
+        type: 'business-security',
+        text: "Your company's security is important to us! Only individuals authorized on the account can make changes. If you are not authorized on the account, we will only be able to assist you with general and non-account specific questions."
       }
     };
-    this.messagesSubject.next([welcomeMessage]);
+
+    // Show connection status
+    setTimeout(() => {
+      const connectionMessage: ChatMessage = {
+        id: this.generateId(),
+        isUser: false,
+        timestamp: new Date(),
+        card: {
+          type: 'connection-status',
+          text: "Please wait a moment while you are connected."
+        }
+      };
+      const currentMessages = this.messagesSubject.value;
+      this.messagesSubject.next([...currentMessages, connectionMessage]);
+
+      // Show main options after connection
+      setTimeout(() => {
+        const optionsMessage: ChatMessage = {
+          id: this.generateId(),
+          isUser: false,
+          timestamp: new Date(),
+          card: {
+            type: 'option-cards',
+            options: [
+              {
+                title: "Help me shop",
+                description: "I'm looking for a new phone, plan, line or protection.",
+                iconUrl: "https://www.att.com/scmsassets/global/icons/svg/retail-financial/pictogram_shopping-bag_96.svg",
+                action: "help_shop"
+              },
+              {
+                title: "I need support",
+                description: "Get help with my phone, account or bill.",
+                iconUrl: "https://www.att.com/scmsassets/global/icons/svg/people/pictogram_handshake_96.svg",
+                action: "need_support"
+              }
+            ]
+          }
+        };
+        const messages = this.messagesSubject.value;
+        this.messagesSubject.next([...messages, optionsMessage]);
+      }, 2000);
+    }, 1000);
+
+    this.messagesSubject.next([securityMessage]);
   }
 
   private initializeAuthenticatedChat(): void {
     const user = this.authService.currentUserValue;
     const userName = user.email.split('@')[0]; // Extract name from email
     
-    let welcomeText = `Welcome back, ${userName}`;
-    if (this.lastUserQuestion) {
-      welcomeText += `\n\nI see you were asking about: "${this.lastUserQuestion}"`;
-    }
-    welcomeText += "\n\nHow can I help you?";
-
     const welcomeMessage: ChatMessage = {
       id: this.generateId(),
       isUser: false,
       timestamp: new Date(),
       card: {
         type: 'text',
-        text: welcomeText,
+        text: `Welcome back, how can I help you?`,
         buttons: [
           { text: "View Bill", action: "view_bill", primary: true },
           { text: "Pay Bill", action: "pay_bill", primary: true },
@@ -232,34 +270,65 @@ export class ChatService {
 
 
   private showBillAnalysis(): void {
+    // Simulate analyzing a large bill with many lines
+    const totalLines = 127; // Simulating a business account with many lines
+    const linesWithIncreases = 8;
+    const linesUnchanged = totalLines - linesWithIncreases;
+    
     this.addBotMessage({
       type: 'bill-analysis',
-      text: "Your bill has increased by $90.49 compared to the previous month.\n\nHere's the breakdown of changes that add up to the difference:",
+      text: `I've analyzed your business account with ${totalLines} lines. Your bill has increased by $90.49 compared to the previous month.\n\nOut of ${totalLines} lines, ${linesWithIncreases} lines had changes while ${linesUnchanged} lines remained unchanged.\n\nHere are the key changes that contributed to the increase:`,
       billBreakdown: [
         {
           lineNumber: "Line number 469.426.7221",
           name: "ABIRAMI THIRUGNANASIVAM",
           changeText: "Charges increased by $37.50",
+          changeAmount: 37.50,
           details: [
             "International Day Pass charges for three days ($36.00)",
-            "Monthly charges and taxes increased"
+            "Monthly charges and taxes increased ($1.50)"
           ]
         },
         {
           lineNumber: "Line number 940.945.7123",
           name: "SREELEKHA RAJAMANICKAM",
           changeText: "New charges of $52.99",
+          changeAmount: 52.99,
           details: [
             "Activation Fee adjustments (charged and credited)",
             "Prorated monthly charges for partial billing period",
             "Surcharges, taxes & fees"
           ]
+        },
+        {
+          lineNumber: "Line number 214.555.0123",
+          name: "BUSINESS LINE 3",
+          changeText: "Charges decreased by $5.00",
+          changeAmount: -5.00,
+          details: [
+            "Promotional discount applied",
+            "Reduced data overage charges"
+          ]
+        },
+        {
+          lineNumber: "Line number 214.555.0156",
+          name: "BUSINESS LINE 4",
+          changeText: "Charges increased by $15.00",
+          changeAmount: 15.00,
+          details: [
+            "Additional data usage charges ($12.00)",
+            "Premium feature activation ($3.00)"
+          ]
         }
       ],
       currentTotal: "$441.28",
       previousTotal: "$350.79",
-      autoPayInfo: "AutoPay is scheduled to charge your card on 10/05/2025.",
-      additionalInfo: "If you need a detailed line-by-line summary, let me know!"
+      totalIncrease: "+$90.49",
+      totalLines: totalLines,
+      linesWithIncreases: linesWithIncreases,
+      linesUnchanged: linesUnchanged,
+      autoPayInfo: "AutoPay is scheduled to charge your business account on 10/05/2025.",
+      additionalInfo: "For a complete line-by-line breakdown of all 127 lines, I can generate a detailed report. Would you like me to do that?"
     });
   }
 
@@ -297,6 +366,14 @@ export class ChatService {
 
   handleButtonClick(action: string, data?: any): void {
     switch (action) {
+      case 'help_shop':
+        this.handleShoppingRequest();
+        break;
+
+      case 'need_support':
+        this.handleSupportRequest();
+        break;
+
       case 'view_bill':
         this.handleViewBillRequest();
         break;
@@ -374,6 +451,33 @@ export class ChatService {
           ]
         });
     }
+  }
+
+  private handleShoppingRequest(): void {
+    this.addBotMessage({
+      type: 'text',
+      text: "I'd be happy to help you find the perfect phone, plan, or protection! What are you most interested in today?",
+      buttons: [
+        { text: "New Phone", action: "shop_phone", primary: true },
+        { text: "New Plan", action: "shop_plan", primary: true },
+        { text: "Add a Line", action: "add_line", primary: true },
+        { text: "Device Protection", action: "device_protection", primary: true }
+      ]
+    });
+  }
+
+  private handleSupportRequest(): void {
+    this.addBotMessage({
+      type: 'text',
+      text: "I'm here to help! What do you need support with?",
+      buttons: [
+        { text: "View Bill", action: "view_bill", primary: true },
+        { text: "Pay Bill", action: "pay_bill", primary: true },
+        { text: "Download Bill", action: "download_bill", primary: true },
+        { text: "Why my bill is too high?", action: "bill_analysis", primary: true },
+        { text: "Technical Support", action: "tech_support", primary: true }
+      ]
+    });
   }
 
   private handleWirelessService(): void {

@@ -6,7 +6,7 @@ export interface ChatMessage {
 }
 
 export interface ChatCard {
-  type: 'text' | 'card' | 'image' | 'form' | 'bill-summary' | 'bill-analysis' | 'payment-method' | 'status';
+  type: 'text' | 'card' | 'image' | 'form' | 'bill-summary' | 'bill-analysis' | 'payment-method' | 'status' | 'business-security' | 'connection-status' | 'option-cards';
   title?: string;
   subtitle?: string;
   text?: string;
@@ -15,8 +15,13 @@ export interface ChatCard {
   formFields?: ChatFormField[];
   billData?: BillSummaryData;
   billBreakdown?: BillBreakdownItem[];
+  options?: OptionCard[];
   currentTotal?: string;
   previousTotal?: string;
+  totalIncrease?: string;
+  totalLines?: number;
+  linesWithIncreases?: number;
+  linesUnchanged?: number;
   autoPayInfo?: string;
   additionalInfo?: string;
   paymentAmount?: number;
@@ -43,7 +48,15 @@ export interface BillBreakdownItem {
   lineNumber: string;
   name: string;
   changeText: string;
+  changeAmount: number;
   details: string[];
+}
+
+export interface OptionCard {
+  title: string;
+  description: string;
+  iconUrl: string;
+  action: string;
 }
 
 export interface BillSummaryData {
