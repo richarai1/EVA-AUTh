@@ -1482,6 +1482,7 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
       this.chatService.isOpen$.subscribe(isOpen => {
         this.isOpen = isOpen;
         if (isOpen) {
+          this.showWelcomeHeader = this.isAuthenticated;
           setTimeout(() => this.scrollToBottom(), 100);
         }
       }),
@@ -1559,7 +1560,12 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
 
   getUserName(): string {
     const user = this.authService.currentUserValue;
-    return user.email ? user.email.split('@')[0] : 'User';
+    if (user.email) {
+      const name = user.email.split('@')[0];
+      // Capitalize first letter
+      return name.charAt(0).toUpperCase() + name.slice(1);
+    }
+    return 'User';
   }
 
   private scrollToBottom(): void {

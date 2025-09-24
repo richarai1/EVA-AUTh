@@ -20,7 +20,9 @@ export class ChatService {
 
   openChat(): void {
     this.isOpenSubject.next(true);
-    if (this.messagesSubject.value.length === 0) {
+    // Always initialize chat when opening, but don't duplicate messages
+    const currentMessages = this.messagesSubject.value;
+    if (currentMessages.length === 0) {
       this.initializeChat();
     }
   }

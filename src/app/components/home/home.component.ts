@@ -70,6 +70,23 @@ export class HomeComponent implements OnInit {
       
       setTimeout(() => {
         this.chatService.openChat();
+        
+        // Show signed in status after a short delay
+        setTimeout(() => {
+          this.chatService.showSignedInStatus();
+          
+          // Then reinitialize after login
+          setTimeout(() => {
+            this.chatService.reinitializeAfterLogin();
+          }, 500);
+        }, 500);
+      }, 1000);
+    } else {
+      // For regular authenticated users, just open chat normally
+      // The welcome header will show automatically
+    }
+  }
+}
         this.chatService.showSignedInStatus();
         
         setTimeout(() => {
