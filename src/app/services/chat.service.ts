@@ -669,12 +669,41 @@ export class ChatService {
   // Method to reinitialize chat after login
   reinitializeAfterLogin(): void {
     const user = this.authService.currentUserValue;
-    const userName = user.email.split('@')[0];
     
     // Add the "Great! Thanks for signing in" message
     this.addBotMessage({
       type: 'text',
-      text: 'Great! Thanks for signing in.\n\nSo I can get you the right info, what service are you asking about?',
+      text: 'Great! Thanks for signing in.',
+    });
+    
+    // Then ask about service
+    setTimeout(() => {
+      this.addBotMessage({
+        type: 'text',
+        text: 'So I can get you the right info, what service are you asking about?',
+        buttons: [
+          { text: "AT&T Wireless", action: "service_wireless_authenticated", primary: true },
+          { text: "AT&T Internet", action: "service_internet_authenticated", primary: true }
+        ]
+      });
+    }, 500);
+  }
+
+  // Add method to show signed in status
+  showSignedInStatus(): void {
+    const statusMessage: ChatMessage = {
+      id: this.generateId(),
+      isUser: false,
+      timestamp: new Date(),
+      card: {
+        type: 'signed-in-status',
+        text: 'You are now signed in'
+      }
+    };
+
+    const currentMessages = this.messagesSubject.value;
+    this.messagesSubject.next([...currentMessages, statusMessage]);
+  }
       buttons: [
         { text: "AT&T Wireless", action: "service_wireless_authenticated", primary: true },
         { text: "AT&T Internet", action: "service_internet_authenticated", primary: true }

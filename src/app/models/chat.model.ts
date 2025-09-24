@@ -6,7 +6,7 @@ export interface ChatMessage {
 }
 
 export interface ChatCard {
-  type: 'text' | 'card' | 'image' | 'form' | 'bill-summary' | 'bill-analysis' | 'payment-method' | 'status' | 'business-security' | 'connection-status' | 'option-cards';
+  type: 'text' | 'card' | 'image' | 'form' | 'bill-summary' | 'bill-analysis' | 'payment-method' | 'status' | 'business-security' | 'connection-status' | 'option-cards' | 'signed-in-status';
   title?: string;
   subtitle?: string;
   text?: string;

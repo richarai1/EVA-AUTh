@@ -58,6 +58,12 @@ import { ChatMessage } from '../../models/chat.model';
               </div>
 
               <!-- Business Security Notice -->
+              <div *ngIf="message.card.type === 'signed-in-status'" class="signed-in-status-message">
+                <div class="status-icon-green">✓</div>
+                <span class="status-text-italic">{{ message.card.text }}</span>
+              </div>
+
+              <!-- Business Security Notice -->
               <div *ngIf="message.card.type === 'business-security'" class="business-security-card">
                 <div class="security-header">
                   <div class="att-logo-small">
@@ -1284,6 +1290,28 @@ import { ChatMessage } from '../../models/chat.model';
       font-style: italic;
     }
 
+    .signed-in-status-message {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: transparent;
+      margin: 4px 0;
+    }
+
+    .status-icon-green {
+      color: #28a745;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .status-text-italic {
+      color: #28a745;
+      font-size: 14px;
+      font-style: italic;
+    }
+
     .chat-input {
       padding: 12px 16px;
       border-top: 1px solid var(--border-color);
@@ -1458,16 +1486,17 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
         }
       }),
       this.authService.currentUser$.subscribe(user => {
+        const wasNotAuthenticated = !this.isAuthenticated;
         this.isAuthenticated = user.isAuthenticated;
-        if (user.isAuthenticated && this.isOpen) {
-          this.showSignedInStatus = true;
-          // Show signed in status first, then reinitialize chat
+        
+        if (user.isAuthenticated && this.isOpen && wasNotAuthenticated) {
+          // Add the signed in status message to chat
+          this.chatService.showSignedInStatus();
+          
+          // Then reinitialize chat after a delay
           setTimeout(() => {
             this.chatService.reinitializeAfterLogin();
-          }, 500);
-          setTimeout(() => {
-            this.showSignedInStatus = false;
-          }, 3000);
+          }, 1000);
         }
       })
     );
