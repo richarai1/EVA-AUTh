@@ -730,6 +730,46 @@ export class ChatService {
     }, 800);
   }
 
+  private showFANInputForm(): void {
+    this.addBotMessage({
+      type: 'form',
+      title: 'Foundation Account Number',
+      text: 'Please enter your Foundation Account Number (FAN):',
+      formFields: [
+        { 
+          label: 'FAN Number', 
+          type: 'text', 
+          name: 'fanNumber', 
+          placeholder: 'Enter 8-digit FAN number' 
+        }
+      ],
+      buttons: [
+        { text: 'Submit', action: 'submit_fan', primary: true },
+        { text: 'Cancel', action: 'cancel_verification' }
+      ]
+    });
+  }
+
+  private showBANInputForm(): void {
+    this.addBotMessage({
+      type: 'form',
+      title: 'Billing Account Number',
+      text: 'Please enter your Billing Account Number (BAN):',
+      formFields: [
+        { 
+          label: 'BAN Number', 
+          type: 'text', 
+          name: 'banNumber', 
+          placeholder: 'Enter 12-digit BAN number' 
+        }
+      ],
+      buttons: [
+        { text: 'Submit', action: 'submit_ban', primary: true },
+        { text: 'Cancel', action: 'cancel_verification' }
+      ]
+    });
+  }
+
   // Execute the user's original request after sign-in
   private executeUserRequest(): void {
     if (this.pendingAction === 'bill_analysis' || this.lastUserQuestion.toLowerCase().includes('bill') && this.lastUserQuestion.toLowerCase().includes('high')) {
