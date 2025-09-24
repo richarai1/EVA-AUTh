@@ -164,6 +164,7 @@ export class ChatService {
       this.showBillSummary();
     } else {
       this.pendingAction = 'view_bill';
+      sessionStorage.setItem('reopenChatAfterLogin', 'true');
       this.addBotMessage({
         type: 'text',
         text: "Now let's have you sign in so I can get you the best answers!",
@@ -186,6 +187,7 @@ export class ChatService {
       this.showBillAnalysis();
     } else {
       this.pendingAction = 'bill_analysis';
+      sessionStorage.setItem('reopenChatAfterLogin', 'true');
       this.addBotMessage({
         type: 'text',
         text: "Now let's have you sign in so I can get you the best answers!",
@@ -208,6 +210,7 @@ export class ChatService {
       this.handleDownloadPdf();
     } else {
       this.pendingAction = 'download_bill';
+      sessionStorage.setItem('reopenChatAfterLogin', 'true');
       this.addBotMessage({
         type: 'text',
         text: "Now let's have you sign in so I can get you the best answers!",
@@ -243,6 +246,7 @@ export class ChatService {
       });
     } else {
       this.pendingAction = 'pay_bill';
+      sessionStorage.setItem('reopenChatAfterLogin', 'true');
       this.addBotMessage({
         type: 'text',
         text: "Now let's have you sign in so I can get you the best answers!",
@@ -467,6 +471,9 @@ export class ChatService {
   }
 
   private handleSupportRequest(): void {
+    // Set flag to reopen chat after login
+    sessionStorage.setItem('reopenChatAfterLogin', 'true');
+    
     this.addBotMessage({
       type: 'text',
       text: "Now let's have you sign in so I can get you the best answers",

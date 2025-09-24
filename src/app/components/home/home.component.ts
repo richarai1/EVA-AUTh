@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChatService } from '../../services/chat.service';
+import { OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-home',
@@ -57,4 +59,23 @@ import { CommonModule } from '@angular/common';
     }
   `]
 })
-export class HomeComponent {}
+export class HomeComponent implements OnInit {
+  constructor(private chatService: ChatService) {}
+
+  ngOnInit(): void {
+    // Check if user just signed in and chat should be reopened
+    const shouldReopenChat = sessionStorage.getItem('reopenChatAfterLogin');
+    if (shouldReopenChat) {
+      sessionStorage.removeItem('reopenChatAfterLogin');
+      
+      setTimeout(() => {
+        this.chatService.openChat();
+        this.chatService.showSignedInStatus();
+        
+        setTimeout(() => {
+          this.chatService.reinitializeAfterLogin();
+        }, 500);
+      }, 1000);
+    }
+  }
+}
