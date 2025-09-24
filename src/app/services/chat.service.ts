@@ -21,6 +21,8 @@ export class ChatService {
   private selectedCompanyName: string = '';
   private fanAttempts: number = 0;
   private banAttempts: number = 0;
+  private waitingForFAN: boolean = false;
+  private waitingForBAN: boolean = false;
 
   constructor(private authService: AuthService) {}
 
@@ -714,10 +716,23 @@ export class ChatService {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
   }
 
+  // Public methods to check waiting states
+  isWaitingForFAN(): boolean {
+    return this.waitingForFAN;
+  }
+
+  isWaitingForBAN(): boolean {
+    return this.waitingForBAN;
+  }
+
   resetChat(): void {
     this.messagesSubject.next([]);
     this.lastUserQuestion = '';
     this.pendingAction = '';
+    this.waitingForFAN = false;
+    this.waitingForBAN = false;
+    this.fanAttempts = 0;
+    this.banAttempts = 0;
     this.initializeChat();
   }
 
