@@ -39,7 +39,7 @@ import { ChatMessage } from '../../models/chat.model';
 
       <!-- Welcome Header (only shown for authenticated users at start) -->
       <div *ngIf="showWelcomeHeader && isAuthenticated" class="welcome-header">
-        <h2 class="welcome-title">Welcome <br>INSPECTOR DRAIN INC</h2>
+        <h2 class="welcome-title">Welcome<br>INSPECTOR DRAIN INC</h2>
         <p class="welcome-time">{{ getCurrentTime() }}</p>
       </div>
 
@@ -96,19 +96,6 @@ import { ChatMessage } from '../../models/chat.model';
                   <div class="option-content">
                     <h3 class="option-title">{{ option.title }}</h3>
                     <p class="option-description">{{ option.description }}</p>
-                  </div>
-                  <div class="option-arrow">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M9 18l6-6-6-6"/>
-                    </svg>
-                  </div>
-                </div>
-                
-                <!-- Account Options -->
-                <div *ngFor="let account of message.card.accountOptions" class="account-option-card" (click)="handleOptionClick(account.action)">
-                  <div class="account-info">
-                    <div class="fan-number">FAN: {{ account.fanNumber }}</div>
-                    <div class="company-name">{{ account.companyName }}</div>
                   </div>
                   <div class="option-arrow">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -641,41 +628,6 @@ import { ChatMessage } from '../../models/chat.model';
     .option-arrow {
       flex-shrink: 0;
       color: var(--secondary-text);
-    }
-
-    .account-option-card {
-      background: white;
-      border: 1px solid #E0E0E0;
-      border-radius: 12px;
-      padding: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .account-option-card:hover {
-      border-color: var(--primary-color);
-      box-shadow: 0 2px 8px rgba(0, 102, 204, 0.1);
-    }
-
-    .account-info {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .fan-number {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--primary-color);
-    }
-
-    .company-name {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text-color);
     }
 
     .user-message-container {
