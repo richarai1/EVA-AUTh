@@ -674,12 +674,10 @@ export class ChatService {
 
   // Method to reinitialize chat after login
   reinitializeAfterLogin(): void {
-    const user = this.authService.currentUserValue;
-    
     // Add the "Great! Thanks for signing in" message
     this.addBotMessage({
       type: 'text',
-      text: 'Great! Thanks for signing in.',
+      text: 'Great! Thanks for signing in.'
     });
     
     // Then ask about service
@@ -710,28 +708,5 @@ export class ChatService {
     const currentMessages = this.messagesSubject.value;
     this.messagesSubject.next([...currentMessages, statusMessage]);
   }
-      buttons: [
-        { text: "AT&T Wireless", action: "service_wireless_authenticated", primary: true },
-        { text: "AT&T Internet", action: "service_internet_authenticated", primary: true }
-      ]
-    });
-    
-    // Execute pending action if any
-    if (this.pendingAction) {
-      switch (this.pendingAction) {
-        case 'view_bill':
-          // Don't execute immediately, wait for service selection
-          break;
-        case 'bill_analysis':
-          // Don't execute immediately, wait for service selection
-          break;
-        case 'download_bill':
-          // Don't execute immediately, wait for service selection
-          break;
-        case 'pay_bill':
-          // Don't execute immediately, wait for service selection
-          break;
-      }
-    }
   }
 }
