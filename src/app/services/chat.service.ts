@@ -453,7 +453,60 @@ export class ChatService {
       case 'submit_payment':
         this.processPayment(data);
         break;
-
+        case 'provide_fan':
+          this.showFANInputForm();
+          break;
+        
+        case 'submit_fan':
+          if (data?.fanNumber) {
+            this.selectedFAN = data.fanNumber;
+            this.addBotMessage({
+              type: 'text',
+              text: `Got it! Your FAN: ${this.selectedFAN}. Now please provide your Billing Account Number (BAN).`
+            });
+            setTimeout(() => this.showBANInputForm(), 800);
+          } else {
+            this.addBotMessage({
+              type: 'text',
+              text: 'Please enter a valid FAN number before proceeding.'
+            });
+            this.showFANInputForm();
+          }
+          break;
+        
+        case 'submit_ban':
+          if (data?.banNumber) {
+            this.selectedBAN = data.banNumber;
+            this.addBotMessage({
+              type: 'text',
+              text: `Thanks! Your BAN: ${this.selectedBAN}. Now you can view or pay your bill below.`
+            });
+            setTimeout(() => {
+              this.addBotMessage({
+                type: 'text',
+                text: 'What would you like to do?',
+                buttons: [
+                  { text: 'View Bill', action: 'view_bill', primary: true },
+                  { text: 'Pay Bill', action: 'pay_bill', primary: true }
+                ]
+              });
+            }, 1000);
+          } else {
+            this.addBotMessage({
+              type: 'text',
+              text: 'Please enter a valid BAN number before proceeding.'
+            });
+            this.showBANInputForm();
+          }
+          break;
+        
+        case 'show_fan_options':
+          this.addBotMessage({
+            type: 'text',
+            text: 'You can find your FAN and BAN on your AT&T account summary or bill statement.'
+          });
+          break;
+        
       default:
         this.addBotMessage({
           type: 'text',
