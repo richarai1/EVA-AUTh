@@ -416,7 +416,7 @@ export class ChatService {
       case 'pay_bill_prompt':
         this.addBotMessage({
           type: 'text',
-          text: "Please enter the amount you want to pay:"
+          text: "How much do you want to pay? Feel free to enter a amount using only numbers."
         });
         break;
 
