@@ -16,21 +16,13 @@ import { ChatMessage } from '../../models/chat.model';
     <div *ngIf="isOpen" class="chat-panel">
       <div class="chat-header">
         <div class="header-left">
-          <div class="att-logo">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
-              <path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="2"/>
-            </svg>
-          </div>
-          <span class="chat-title">AT&T</span>
+         
+             <img src="assets/att_header_logo.svg" alt="AT&T Logo" class="att-logo" />
+        
+         
         </div>
         <div class="header-controls">
-          <button class="header-button" aria-label="Settings">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"/>
-            </svg>
-          </button>
+         
           <button class="header-button" aria-label="Minimize">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="5" y1="12" x2="19" y2="12"/>
@@ -47,7 +39,7 @@ import { ChatMessage } from '../../models/chat.model';
 
       <!-- Welcome Header (only shown for authenticated users at start) -->
       <div *ngIf="showWelcomeHeader && isAuthenticated" class="welcome-header">
-        <h2 class="welcome-title">Good Evening,<br>{{ getUserName() }}</h2>
+        <h2 class="welcome-title">Good Evening,<br>Richa</h2>
         <p class="welcome-time">{{ getCurrentTime() }}</p>
       </div>
 
@@ -354,13 +346,7 @@ import { ChatMessage } from '../../models/chat.model';
             </svg>
           </button>
         </form>
-        <div class="chat-footer">
-          <div class="eva-branding">
-            <img src="assets/EVA.png" alt="EVA" class="eva-logo" />
-            <span class="eva-text">Powered by EVA</span>
-          </div>
-          <div class="current-time">{{ getCurrentTime() }}</div>
-        </div>
+       
         <p class="privacy-notice">Chats are recorded for quality and purposes stated in our privacy notice.</p>
       </div>
     </div>
@@ -407,7 +393,8 @@ import { ChatMessage } from '../../models/chat.model';
     }
 
     .chat-header {
-      background: #4A4A4A;
+      /*background: #4A4A4A;*/
+      background: linear-gradient(285.78deg, #007AE2 0%, #00388F 100%); box-shadow: 0 2px 4px -1px rgb(0 0 0 / 20%); height: 60px;
       color: white;
       padding: 12px 16px;
       border-radius: 8px 8px 0 0;
@@ -423,7 +410,7 @@ import { ChatMessage } from '../../models/chat.model';
     }
 
     .att-logo {
-      width: 24px;
+      width: 64px;
       height: 24px;
       color: white;
     }
