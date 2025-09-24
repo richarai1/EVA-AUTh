@@ -14,6 +14,7 @@ export class ChatService {
   public isOpen$ = this.isOpenSubject.asObservable();
 
   private lastUserQuestion: string = '';
+  private lastUserMessage: ChatMessage | null = null;
   private pendingAction: string = '';
 
   constructor(private authService: AuthService) {}
@@ -123,6 +124,9 @@ export class ChatService {
         text
       }
     };
+
+    // Store the last user message for potential replay after sign-in
+    this.lastUserMessage = userMessage;
 
     const currentMessages = this.messagesSubject.value;
     this.messagesSubject.next([...currentMessages, userMessage]);
@@ -661,11 +665,32 @@ export class ChatService {
 
   // Method to reinitialize chat after login
   reinitializeAfterLogin(): void {
-    // Add the "Great! Thanks for signing in" message
-    this.addBotMessage({
-      type: 'text',
-      text: 'Great! Thanks for signing in.'
-    });
+    // Add the "Great! Thanks for signing in" message with delay
+    setTimeout(() => {
+      this.addBotMessage({
+        type: 'text',
+        text: 'Great! Thanks for signing in.'
+      });
+      
+      // Add the user's last message back to the conversation
+      if (this.lastUserMessage) {
+        setTimeout(() => {
+          const currentMessages = this.messagesSubject.value;
+          this.messagesSubject.next([...currentMessages, this.lastUserMessage!]);
+          
+          // Then respond to their original question with realistic delay
+          setTimeout(() => {
+            this.executeUserRequest();
+          }, 1500); // 1.5 second delay for realistic response time
+        }, 800); // 0.8 second delay before showing user message
+      } else {
+        // Fallback if no last message
+        setTimeout(() => {
+          this.executeUserRequest();
+        }, 1000);
+      }
+    }, 500); // 0.5 second delay before "Great! Thanks for signing in"
+  }
     
     // Then execute the pending action based on what the user originally asked
     setTimeout(() => {
@@ -692,6 +717,52 @@ export class ChatService {
   // Execute the user's original request after sign-in
   private executeUserRequest(): void {
     if (this.pendingAction === 'bill_analysis' || this.lastUserQuestion.toLowerCase().includes('bill') && this.lastUserQuestion.toLowerCase().includes('high')) {
+      // Add typing indicator delay for bill analysis
+      this.addBotMessage({
+        type: 'text',
+        text: 'Let me analyze your bill for you...'
+      });
+      
+      setTimeout(() => {
+        this.showBillAnalysis();
+      }, 2000);
+    } else if (this.pendingAction === 'view_bill' || this.lastUserQuestion.toLowerCase().includes('view bill')) {
+      this.addBotMessage({
+        type: 'text',
+        text: 'Let me pull up your bill summary...'
+      });
+      
+      setTimeout(() => {
+        this.showBillSummary();
+      }, 1800);
+    } else if (this.pendingAction === 'download_bill' || this.lastUserQuestion.toLowerCase().includes('download')) {
+      setTimeout(() => {
+        this.handleDownloadPdf();
+      }, 1000);
+    } else if (this.pendingAction === 'pay_bill' || this.lastUserQuestion.toLowerCase().includes('pay')) {
+      setTimeout(() => {
+        this.addBotMessage({
+          type: 'text',
+          text: "Please enter the amount you want to pay:"
+        });
+      }, 1000);
+    } else {
+      // Default response with delay
+      setTimeout(() => {
+        this.addBotMessage({
+          type: 'text',
+          text: "How can I help you today?",
+          buttons: [
+            { text: "View Bill", action: "view_bill", primary: true },
+            { text: "Pay Bill", action: "pay_bill", primary: true },
+            { text: "Download Bill", action: "download_bill", primary: true },
+            { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
+          ]
+        });
+      }, 1000);
+    }
+    this.pendingAction = '';
+  }
       this.showBillAnalysis();
     } else if (this.pendingAction === 'view_bill') {
       this.showBillSummary();
