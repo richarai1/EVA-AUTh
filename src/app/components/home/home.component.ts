@@ -87,12 +87,3 @@ export class HomeComponent implements OnInit {
     }
   }
 }
-        this.chatService.showSignedInStatus();
-        
-        setTimeout(() => {
-          this.chatService.reinitializeAfterLogin();
-        }, 500);
-      }, 1000);
-    }
-  }
-}
