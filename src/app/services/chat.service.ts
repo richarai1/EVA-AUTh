@@ -13,6 +13,8 @@ export class ChatService {
   private isOpenSubject = new BehaviorSubject<boolean>(false);
   public isOpen$ = this.isOpenSubject.asObservable();
 
+  private lastUserQuestion: string = '';
+  private pendingAction: string = '';
   constructor(private authService: AuthService) {}
 
   openChat(): void {
@@ -27,15 +29,54 @@ export class ChatService {
   }
 
   private initializeChat(): void {
+    if (this.authService.isAuthenticated()) {
+      this.initializeAuthenticatedChat();
+    } else {
+      this.initializeGuestChat();
+    }
+  }
+
+  private initializeGuestChat(): void {
     const welcomeMessage: ChatMessage = {
       id: this.generateId(),
       isUser: false,
       timestamp: new Date(),
       card: {
         type: 'text',
-        text: "Hi there!\n\nLet's get you some help. Please select an option so I can connect you.",
+        text: "How can I help you?",
         buttons: [
-          { text: "I need support", action: "need_support", primary: true }
+          { text: "View Bill", action: "view_bill", primary: true },
+          { text: "Pay Bill", action: "pay_bill", primary: true },
+          { text: "Download Bill", action: "download_bill", primary: true },
+          { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
+        ]
+      }
+    };
+    this.messagesSubject.next([welcomeMessage]);
+  }
+
+  private initializeAuthenticatedChat(): void {
+    const user = this.authService.currentUserValue;
+    const userName = user.email.split('@')[0]; // Extract name from email
+    
+    let welcomeText = `Welcome back, ${userName}`;
+    if (this.lastUserQuestion) {
+      welcomeText += `\n\nI see you were asking about: "${this.lastUserQuestion}"`;
+    }
+    welcomeText += "\n\nHow can I help you?";
+
+    const welcomeMessage: ChatMessage = {
+      id: this.generateId(),
+      isUser: false,
+      timestamp: new Date(),
+      card: {
+        type: 'text',
+        text: welcomeText,
+        buttons: [
+          { text: "View Bill", action: "view_bill", primary: true },
+          { text: "Pay Bill", action: "pay_bill", primary: true },
+          { text: "Download Bill", action: "download_bill", primary: true },
+          { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
         ]
       }
     };
@@ -43,6 +84,8 @@ export class ChatService {
   }
 
   sendMessage(text: string): void {
+    this.lastUserQuestion = text;
+    
     const userMessage: ChatMessage = {
       id: this.generateId(),
       isUser: true,
@@ -64,16 +107,14 @@ export class ChatService {
   private processUserMessage(text: string): void {
     const lowerText = text.toLowerCase();
 
-    if (lowerText.includes('view bill') || lowerText.includes('bill') || lowerText.includes('account') || lowerText.includes('why my bill is too high')) {
+    if (lowerText.includes('view bill') || lowerText.includes('bill summary')) {
       this.handleViewBillRequest();
+    } else if (lowerText.includes('why my bill is too high') || lowerText.includes('bill analysis')) {
+      this.handleBillAnalysisRequest();
+    } else if (lowerText.includes('download bill') || lowerText.includes('download pdf')) {
+      this.handleDownloadBillRequest();
     } else if (lowerText.includes('bill pay') || lowerText.includes('pay bill')) {
       this.handleBillPayRequest();
-    } else if (lowerText.includes('download') || lowerText.includes('pdf')) {
-      if (this.authService.isAuthenticated()) {
-        this.handleDownloadPdf();
-      } else {
-        this.promptForAuthentication('download');
-      }
     } else if (lowerText.includes('pay') || lowerText.includes('payment')) {
       this.handlePayBillRequest();
     } else if (/^\d+(\.\d{2})?$/.test(text.trim())) {
@@ -81,15 +122,22 @@ export class ChatService {
     } else {
       this.addBotMessage({
         type: 'text',
-        text: "Can you tell me more about what you need help with?"
+        text: "Can you tell me more about what you need help with?",
+        buttons: [
+          { text: "View Bill", action: "view_bill", primary: true },
+          { text: "Pay Bill", action: "pay_bill", primary: true },
+          { text: "Download Bill", action: "download_bill", primary: true },
+          { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
+        ]
       });
     }
   }
 
   private handleViewBillRequest(): void {
     if (this.authService.isAuthenticated()) {
-      this.showBillAnalysis();
+      this.showBillSummary();
     } else {
+      this.pendingAction = 'view_bill';
       this.addBotMessage({
         type: 'text',
         text: "Now let's have you sign in so I can get you the best answers!",
@@ -107,6 +155,49 @@ export class ChatService {
     }
   }
 
+  private handleBillAnalysisRequest(): void {
+    if (this.authService.isAuthenticated()) {
+      this.showBillAnalysis();
+    } else {
+      this.pendingAction = 'bill_analysis';
+      this.addBotMessage({
+        type: 'text',
+        text: "Now let's have you sign in so I can get you the best answers!",
+        buttons: [
+          { text: "Sign In", action: "login", primary: true }
+        ]
+      });
+      
+      setTimeout(() => {
+        this.addBotMessage({
+          type: 'text',
+          text: "We'll resume our conversation after you sign-in. Opening a window for you to do that."
+        });
+      }, 1000);
+    }
+  }
+
+  private handleDownloadBillRequest(): void {
+    if (this.authService.isAuthenticated()) {
+      this.handleDownloadPdf();
+    } else {
+      this.pendingAction = 'download_bill';
+      this.addBotMessage({
+        type: 'text',
+        text: "Now let's have you sign in so I can get you the best answers!",
+        buttons: [
+          { text: "Sign In", action: "login", primary: true }
+        ]
+      });
+      
+      setTimeout(() => {
+        this.addBotMessage({
+          type: 'text',
+          text: "We'll resume our conversation after you sign-in. Opening a window for you to do that."
+        });
+      }, 1000);
+    }
+  }
   private handleBillPayRequest(): void {
     this.addBotMessage({
       type: 'text',
@@ -125,21 +216,24 @@ export class ChatService {
         text: "Please enter the amount you want to pay:"
       });
     } else {
-      this.promptForAuthentication('pay_bill');
+      this.pendingAction = 'pay_bill';
+      this.addBotMessage({
+        type: 'text',
+        text: "Now let's have you sign in so I can get you the best answers!",
+        buttons: [
+          { text: "Sign In", action: "login", primary: true }
+        ]
+      });
+      
+      setTimeout(() => {
+        this.addBotMessage({
+          type: 'text',
+          text: "We'll resume our conversation after you sign-in. Opening a window for you to do that."
+        });
+      }, 1000);
     }
   }
 
-  private promptForAuthentication(action: string): void {
-    this.addBotMessage({
-      type: 'card',
-      title: "🔐 Authentication Required",
-      text: "To access your account information, please sign in or continue without signing in for limited access.",
-      buttons: [
-        { text: "Sign In", action: "login", data: { returnAction: action } },
-        { text: "Continue without sign in", action: "continue_guest", data: { returnAction: action } }
-      ]
-    });
-  }
 
   private showBillAnalysis(): void {
     this.addBotMessage({
@@ -207,11 +301,20 @@ export class ChatService {
 
   handleButtonClick(action: string, data?: any): void {
     switch (action) {
-      case 'need_support':
-        this.addBotMessage({
-          type: 'text',
-          text: "Can you tell me more about what you need help with?"
-        });
+      case 'view_bill':
+        this.handleViewBillRequest();
+        break;
+
+      case 'bill_analysis':
+        this.handleBillAnalysisRequest();
+        break;
+
+      case 'download_bill':
+        this.handleDownloadBillRequest();
+        break;
+
+      case 'pay_bill':
+        this.handlePayBillRequest();
         break;
 
       case 'service_wireless':
@@ -226,9 +329,6 @@ export class ChatService {
         // This will be handled by the component to navigate to login
         break;
 
-      case 'continue_guest':
-        this.handleGuestFlow(data?.returnAction);
-        break;
 
       case 'download_pdf':
         this.handleDownloadPdf();
@@ -269,7 +369,13 @@ export class ChatService {
       default:
         this.addBotMessage({
           type: 'text',
-          text: "I'm not sure how to help with that. Try asking about your bill, making a payment, or downloading your statement."
+          text: "I'm not sure how to help with that. Try asking about your bill, making a payment, or downloading your statement.",
+          buttons: [
+            { text: "View Bill", action: "view_bill", primary: true },
+            { text: "Pay Bill", action: "pay_bill", primary: true },
+            { text: "Download Bill", action: "download_bill", primary: true },
+            { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
+          ]
         });
     }
   }
@@ -306,28 +412,6 @@ export class ChatService {
     }, 2000);
   }
 
-  private handleGuestFlow(returnAction: string): void {
-    switch (returnAction) {
-      case 'view_bill':
-        this.addBotMessage({
-          type: 'text',
-          text: "As a guest, you have limited access. Please sign in for full account details, or I can help you with general billing questions."
-        });
-        break;
-      case 'download':
-        this.addBotMessage({
-          type: 'text',
-          text: "PDF downloads require authentication for security. Please sign in to download your bill."
-        });
-        break;
-      case 'pay_bill':
-        this.addBotMessage({
-          type: 'text',
-          text: "For guest payments, you'll be redirected to our secure payment portal. Please enter the amount you'd like to pay:"
-        });
-        break;
-    }
-  }
 
   private handlePaymentAmount(amount: number): void {
     if (amount > 0) {
@@ -435,18 +519,64 @@ export class ChatService {
 
   resetChat(): void {
     this.messagesSubject.next([]);
+    this.lastUserQuestion = '';
+    this.pendingAction = '';
     this.initializeChat();
   }
 
   // Method to reinitialize chat after login
   reinitializeAfterLogin(): void {
-    this.resetChat();
-    this.addBotMessage({
-      type: 'text',
-      text: "Great! Thanks for signing in.\n\nSo I can get you the right info, what service are you asking about?",
-      buttons: [
-        { text: "AT&T Wireless", action: "service_wireless_authenticated", primary: true }
-      ]
-    });
+    const user = this.authService.currentUserValue;
+    const userName = user.email.split('@')[0];
+    
+    let welcomeText = `Great! Thanks for signing in, ${userName}.`;
+    
+    if (this.lastUserQuestion) {
+      welcomeText += `\n\nI see you were asking about: "${this.lastUserQuestion}"`;
+    }
+    
+    // Execute pending action if any
+    if (this.pendingAction) {
+      switch (this.pendingAction) {
+        case 'view_bill':
+          this.showBillSummary();
+          break;
+        case 'bill_analysis':
+          this.showBillAnalysis();
+          break;
+        case 'download_bill':
+          this.handleDownloadPdf();
+          break;
+        case 'pay_bill':
+          this.addBotMessage({
+            type: 'text',
+            text: welcomeText + "\n\nPlease enter the amount you want to pay:"
+          });
+          break;
+        default:
+          this.addBotMessage({
+            type: 'text',
+            text: welcomeText + "\n\nHow can I help you?",
+            buttons: [
+              { text: "View Bill", action: "view_bill", primary: true },
+              { text: "Pay Bill", action: "pay_bill", primary: true },
+              { text: "Download Bill", action: "download_bill", primary: true },
+              { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
+            ]
+          });
+      }
+      this.pendingAction = '';
+    } else {
+      this.addBotMessage({
+        type: 'text',
+        text: welcomeText + "\n\nHow can I help you?",
+        buttons: [
+          { text: "View Bill", action: "view_bill", primary: true },
+          { text: "Pay Bill", action: "pay_bill", primary: true },
+          { text: "Download Bill", action: "download_bill", primary: true },
+          { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
+        ]
+      });
+    }
   }
 }

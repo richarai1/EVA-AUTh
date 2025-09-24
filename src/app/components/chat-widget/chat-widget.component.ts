@@ -37,9 +37,9 @@ import { ChatMessage } from '../../models/chat.model';
         </div>
       </div>
 
-      <!-- Welcome Header (only shown at start) -->
-      <div *ngIf="showWelcomeHeader" class="welcome-header">
-        <h2 class="welcome-title">Good Evening,<br>Jayakumar</h2>
+      <!-- Welcome Header (only shown for authenticated users at start) -->
+      <div *ngIf="showWelcomeHeader && isAuthenticated" class="welcome-header">
+        <h2 class="welcome-title">Good Evening,<br>{{ getUserName() }}</h2>
         <p class="welcome-time">{{ getCurrentTime() }}</p>
       </div>
 
@@ -1053,6 +1053,7 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
   currentMessage = '';
   showWelcomeHeader = true;
   showSignedInStatus = false;
+  isAuthenticated = false;
   
   private subscriptions: Subscription[] = [];
 
@@ -1075,8 +1076,10 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
         }
       }),
       this.authService.currentUser$.subscribe(user => {
+        this.isAuthenticated = user.isAuthenticated;
         if (user.isAuthenticated && this.isOpen) {
           this.showSignedInStatus = true;
+          this.chatService.reinitializeAfterLogin();
           setTimeout(() => {
             this.showSignedInStatus = false;
           }, 3000);
@@ -1091,7 +1094,7 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
 
   openChat(): void {
     this.chatService.openChat();
-    this.showWelcomeHeader = true;
+    this.showWelcomeHeader = this.isAuthenticated;
   }
 
   closeChat(): void {
@@ -1135,6 +1138,10 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
     return `${dayName} ${time}`;
   }
 
+  getUserName(): string {
+    const user = this.authService.currentUserValue;
+    return user.email ? user.email.split('@')[0] : 'User';
+  }
   private scrollToBottom(): void {
     setTimeout(() => {
       const messagesContainer = document.querySelector('.chat-messages');
