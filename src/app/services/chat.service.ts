@@ -691,12 +691,6 @@ export class ChatService {
       }
     }, 500); // 0.5 second delay before "Great! Thanks for signing in"
   }
-    
-    // Then execute the pending action based on what the user originally asked
-    setTimeout(() => {
-      this.executeUserRequest();
-    }, 500);
-  }
 
   // Add method to show signed in status
   showSignedInStatus(): void {
@@ -717,52 +711,6 @@ export class ChatService {
   // Execute the user's original request after sign-in
   private executeUserRequest(): void {
     if (this.pendingAction === 'bill_analysis' || this.lastUserQuestion.toLowerCase().includes('bill') && this.lastUserQuestion.toLowerCase().includes('high')) {
-      // Add typing indicator delay for bill analysis
-      this.addBotMessage({
-        type: 'text',
-        text: 'Let me analyze your bill for you...'
-      });
-      
-      setTimeout(() => {
-        this.showBillAnalysis();
-      }, 2000);
-    } else if (this.pendingAction === 'view_bill' || this.lastUserQuestion.toLowerCase().includes('view bill')) {
-      this.addBotMessage({
-        type: 'text',
-        text: 'Let me pull up your bill summary...'
-      });
-      
-      setTimeout(() => {
-        this.showBillSummary();
-      }, 1800);
-    } else if (this.pendingAction === 'download_bill' || this.lastUserQuestion.toLowerCase().includes('download')) {
-      setTimeout(() => {
-        this.handleDownloadPdf();
-      }, 1000);
-    } else if (this.pendingAction === 'pay_bill' || this.lastUserQuestion.toLowerCase().includes('pay')) {
-      setTimeout(() => {
-        this.addBotMessage({
-          type: 'text',
-          text: "Please enter the amount you want to pay:"
-        });
-      }, 1000);
-    } else {
-      // Default response with delay
-      setTimeout(() => {
-        this.addBotMessage({
-          type: 'text',
-          text: "How can I help you today?",
-          buttons: [
-            { text: "View Bill", action: "view_bill", primary: true },
-            { text: "Pay Bill", action: "pay_bill", primary: true },
-            { text: "Download Bill", action: "download_bill", primary: true },
-            { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
-          ]
-        });
-      }, 1000);
-    }
-    this.pendingAction = '';
-  }
       this.showBillAnalysis();
     } else if (this.pendingAction === 'view_bill') {
       this.showBillSummary();
