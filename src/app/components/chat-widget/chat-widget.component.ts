@@ -15,7 +15,7 @@ import { ChatMessage } from '../../models/chat.model';
     <!-- Chat Panel -->
     <div *ngIf="isOpen" class="chat-panel">
       <div class="chat-header">
-        <span class="chat-title">Chat with AT&T</span>
+        <span class="chat-title"> <img src="assets/att_header_logo.svg"  class="chat-logo" /></span>
         <div class="header-controls">
           <button class="header-button" aria-label="Settings">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -307,7 +307,7 @@ import { ChatMessage } from '../../models/chat.model';
     }
 
     .chat-header {
-      background: #666666;
+      background: linear-gradient(285.78deg, #007AE2 0%, #00388F 100%);
       color: white;
       padding: 12px 16px;
       border-radius: 8px 8px 0 0;
@@ -317,9 +317,19 @@ import { ChatMessage } from '../../models/chat.model';
     }
 
     .chat-title {
-      font-size: 16px;
-      font-weight: 500;
-    }
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 500;
+  
+}
+
+.chat-logo {
+  width: 61px; /* adjust as needed */
+  height: 31px;
+
+}
+
 
     .header-controls {
       display: flex;
@@ -412,7 +422,7 @@ import { ChatMessage } from '../../models/chat.model';
       font-size: 14px;
       line-height: 1.4;
       color: var(--text-color);
-      white-space: pre-wrap;
+      
       margin: 0;
     }
 
