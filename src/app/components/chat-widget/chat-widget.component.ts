@@ -89,7 +89,7 @@ import { ChatMessage } from '../../models/chat.model';
 
               <!-- Option Cards -->
               <div *ngIf="message.card.type === 'option-cards'" class="option-cards">
-                <div *ngFor="let option of message.card.options" class="option-card" (click)="handleOptionClick(option.action)" *ngIf="message.card.options">
+                <div *ngFor="let option of message.card.options" class="option-card" (click)="handleOptionClick(option.action)">
                   <div class="option-icon">
                     <img [src]="option.iconUrl" [alt]="option.title" class="option-icon-img" />
                   </div>
@@ -105,7 +105,7 @@ import { ChatMessage } from '../../models/chat.model';
                 </div>
                 
                 <!-- Account Options -->
-                <div *ngFor="let account of message.card.accountOptions" class="account-option-card" (click)="handleOptionClick(account.action)" *ngIf="message.card.accountOptions">
+                <div *ngFor="let account of message.card.accountOptions" class="account-option-card" (click)="handleOptionClick(account.action)">
                   <div class="account-info">
                     <div class="fan-number">FAN: {{ account.fanNumber }}</div>
                     <div class="company-name">{{ account.companyName }}</div>
