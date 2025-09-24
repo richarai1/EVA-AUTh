@@ -33,9 +33,10 @@ export class ChatService {
       timestamp: new Date(),
       card: {
         type: 'text',
-        text: this.authService.isAuthenticated()
-          ? "I can see you are logged in. How can I assist you?"
-          : "Hi! I'm EVA, your AT&T virtual assistant. How can I help you today?",
+        text: "Hi there!\n\nLet's get you some help. Please select an option so I can connect you.",
+        buttons: [
+          { text: "I need support", action: "need_support", primary: true }
+        ]
       }
     };
     this.messagesSubject.next([welcomeMessage]);
@@ -63,8 +64,10 @@ export class ChatService {
   private processUserMessage(text: string): void {
     const lowerText = text.toLowerCase();
 
-    if (lowerText.includes('view bill') || lowerText.includes('bill') || lowerText.includes('account')) {
+    if (lowerText.includes('view bill') || lowerText.includes('bill') || lowerText.includes('account') || lowerText.includes('why my bill is too high')) {
       this.handleViewBillRequest();
+    } else if (lowerText.includes('bill pay') || lowerText.includes('pay bill')) {
+      this.handleBillPayRequest();
     } else if (lowerText.includes('download') || lowerText.includes('pdf')) {
       if (this.authService.isAuthenticated()) {
         this.handleDownloadPdf();
@@ -78,18 +81,41 @@ export class ChatService {
     } else {
       this.addBotMessage({
         type: 'text',
-        text: "I can help you with viewing your bill, downloading your bill, or making a payment. What would you like to do?"
+        text: "Can you tell me more about what you need help with?"
       });
     }
   }
 
   private handleViewBillRequest(): void {
-    debugger;
     if (this.authService.isAuthenticated()) {
-      this.showBillSummary();
+      this.showBillAnalysis();
     } else {
-      this.promptForAuthentication('view_bill');
+      this.addBotMessage({
+        type: 'text',
+        text: "Now let's have you sign in so I can get you the best answers!",
+        buttons: [
+          { text: "Sign In", action: "login", primary: true }
+        ]
+      });
+      
+      setTimeout(() => {
+        this.addBotMessage({
+          type: 'text',
+          text: "We'll resume our conversation after you sign-in. Opening a window for you to do that."
+        });
+      }, 1000);
     }
+  }
+
+  private handleBillPayRequest(): void {
+    this.addBotMessage({
+      type: 'text',
+      text: "So I can get you the right info, what service are you asking about?",
+      buttons: [
+        { text: "AT&T Wireless", action: "service_wireless", primary: true },
+        { text: "AT&T Internet", action: "service_internet", primary: true }
+      ]
+    });
   }
 
   private handlePayBillRequest(): void {
@@ -115,8 +141,39 @@ export class ChatService {
     });
   }
 
+  private showBillAnalysis(): void {
+    this.addBotMessage({
+      type: 'bill-analysis',
+      text: "Your bill has increased by $90.49 compared to the previous month.\n\nHere's the breakdown of changes that add up to the difference:",
+      billBreakdown: [
+        {
+          lineNumber: "Line number 469.426.7221",
+          name: "ABIRAMI THIRUGNANASIVAM",
+          changeText: "Charges increased by $37.50",
+          details: [
+            "International Day Pass charges for three days ($36.00)",
+            "Monthly charges and taxes increased"
+          ]
+        },
+        {
+          lineNumber: "Line number 940.945.7123",
+          name: "SREELEKHA RAJAMANICKAM",
+          changeText: "New charges of $52.99",
+          details: [
+            "Activation Fee adjustments (charged and credited)",
+            "Prorated monthly charges for partial billing period",
+            "Surcharges, taxes & fees"
+          ]
+        }
+      ],
+      currentTotal: "$441.28",
+      previousTotal: "$350.79",
+      autoPayInfo: "AutoPay is scheduled to charge your card on 10/05/2025.",
+      additionalInfo: "If you need a detailed line-by-line summary, let me know!"
+    });
+  }
+
   private showBillSummary(): void {
-    debugger
     const billData: BillSummaryData = {
       companyName: "INSPECTOR DRAIN INC",
       companyAddress: "5834 BETHELVIEW RD\nCUMMING, GA 30040-6312",
@@ -150,6 +207,21 @@ export class ChatService {
 
   handleButtonClick(action: string, data?: any): void {
     switch (action) {
+      case 'need_support':
+        this.addBotMessage({
+          type: 'text',
+          text: "Can you tell me more about what you need help with?"
+        });
+        break;
+
+      case 'service_wireless':
+        this.handleWirelessService();
+        break;
+
+      case 'service_internet':
+        this.handleInternetService();
+        break;
+
       case 'login':
         // This will be handled by the component to navigate to login
         break;
@@ -169,6 +241,20 @@ export class ChatService {
         });
         break;
 
+      case 'confirm_payment':
+        this.addBotMessage({
+          type: 'text',
+          text: "How much do you want to pay?\n\nFeel free to enter a amount using only numbers."
+        });
+        break;
+
+      case 'cancel_payment':
+        this.addBotMessage({
+          type: 'text',
+          text: "No problem! Is there anything else I can help you with today?"
+        });
+        break;
+
       case 'pay_with_visa':
       case 'pay_with_mastercard':
       case 'pay_with_discover':
@@ -180,19 +266,44 @@ export class ChatService {
         this.processPayment(data);
         break;
 
-      case 'cancel_payment':
-        this.addBotMessage({
-          type: 'text',
-          text: "❌ Payment process has been cancelled."
-        });
-        break;
-
       default:
         this.addBotMessage({
           type: 'text',
           text: "I'm not sure how to help with that. Try asking about your bill, making a payment, or downloading your statement."
         });
     }
+  }
+
+  private handleWirelessService(): void {
+    if (this.authService.isAuthenticated()) {
+      this.showBillAnalysis();
+    } else {
+      this.addBotMessage({
+        type: 'text',
+        text: "Great! Thanks for signing in.\n\nSo I can get you the right info, what service are you asking about?",
+        buttons: [
+          { text: "AT&T Wireless", action: "service_wireless_authenticated", primary: true }
+        ]
+      });
+    }
+  }
+
+  private handleInternetService(): void {
+    this.addBotMessage({
+      type: 'text',
+      text: "OK, let me pull up your account info"
+    });
+    
+    setTimeout(() => {
+      this.addBotMessage({
+        type: 'text',
+        text: "It looks like your account is paid in full.\n\nDo you still want to make a payment?",
+        buttons: [
+          { text: "Yes", action: "confirm_payment", primary: true },
+          { text: "No", action: "cancel_payment" }
+        ]
+      });
+    }, 2000);
   }
 
   private handleGuestFlow(returnAction: string): void {
@@ -221,17 +332,16 @@ export class ChatService {
   private handlePaymentAmount(amount: number): void {
     if (amount > 0) {
       this.addBotMessage({
-        type: 'card',
-        title: "💳 Select Payment Method",
-        subtitle: `Amount: $${amount.toFixed(2)}`,
-        text: "Choose your preferred payment method:",
-        buttons: [
-          { text: "💳 Visa", action: "pay_with_visa", data: amount },
-          { text: "💳 MasterCard", action: "pay_with_mastercard", data: amount },
-          { text: "💳 Discover", action: "pay_with_discover", data: amount },
-          { text: "💳 American Express", action: "pay_with_amex", data: amount }
-        ]
+        type: 'text',
+        text: `Great, let me help you with your $${amount.toFixed(2)} payment. Select one of the available options below.`
       });
+      
+      setTimeout(() => {
+        this.addBotMessage({
+          type: 'payment-method',
+          paymentAmount: amount
+        });
+      }, 500);
     } else {
       this.addBotMessage({
         type: 'text',
@@ -331,5 +441,12 @@ export class ChatService {
   // Method to reinitialize chat after login
   reinitializeAfterLogin(): void {
     this.resetChat();
+    this.addBotMessage({
+      type: 'text',
+      text: "Great! Thanks for signing in.\n\nSo I can get you the right info, what service are you asking about?",
+      buttons: [
+        { text: "AT&T Wireless", action: "service_wireless_authenticated", primary: true }
+      ]
+    });
   }
 }

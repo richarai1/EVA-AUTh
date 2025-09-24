@@ -6,7 +6,7 @@ export interface ChatMessage {
 }
 
 export interface ChatCard {
-  type: 'text' | 'card' | 'image' | 'form' | 'bill-summary';
+  type: 'text' | 'card' | 'image' | 'form' | 'bill-summary' | 'bill-analysis' | 'payment-method' | 'status';
   title?: string;
   subtitle?: string;
   text?: string;
@@ -14,6 +14,13 @@ export interface ChatCard {
   buttons?: ChatButton[];
   formFields?: ChatFormField[];
   billData?: BillSummaryData;
+  billBreakdown?: BillBreakdownItem[];
+  currentTotal?: string;
+  previousTotal?: string;
+  autoPayInfo?: string;
+  additionalInfo?: string;
+  paymentAmount?: number;
+  statusType?: 'success' | 'error' | 'info' | 'warning';
 }
 
 export interface ChatFormField {
@@ -29,6 +36,14 @@ export interface ChatButton {
   text: string;
   action: string;
   data?: any;
+  primary?: boolean;
+}
+
+export interface BillBreakdownItem {
+  lineNumber: string;
+  name: string;
+  changeText: string;
+  details: string[];
 }
 
 export interface BillSummaryData {
