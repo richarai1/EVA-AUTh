@@ -39,15 +39,7 @@ export class ChatService {
 
   private initializeGuestChat(): void {
     // Show business security notice first
-    const securityMessage: ChatMessage = {
-      id: this.generateId(),
-      isUser: false,
-      timestamp: new Date(),
-      card: {
-        type: 'business-security',
-        text: "Your company's security is important to us! Only individuals authorized on the account can make changes. If you are not authorized on the account, we will only be able to assist you with general and non-account specific questions."
-      }
-    };
+    
 
     // Show connection status
     setTimeout(() => {
@@ -57,7 +49,7 @@ export class ChatService {
         timestamp: new Date(),
         card: {
           type: 'connection-status',
-          text: "Please wait a moment while you are connected."
+          text: "Hi there! \n Let's get you some help. Please select an option so I can connect you."
         }
       };
       const currentMessages = this.messagesSubject.value;
@@ -92,7 +84,7 @@ export class ChatService {
       }, 2000);
     }, 1000);
 
-    this.messagesSubject.next([securityMessage]);
+   
   }
 
   private initializeAuthenticatedChat(): void {
@@ -469,15 +461,19 @@ export class ChatService {
   private handleSupportRequest(): void {
     this.addBotMessage({
       type: 'text',
-      text: "I'm here to help! What do you need support with?",
+      text: "Now let's have you sign in so I can get you the best answers",
       buttons: [
-        { text: "View Bill", action: "view_bill", primary: true },
-        { text: "Pay Bill", action: "pay_bill", primary: true },
-        { text: "Download Bill", action: "download_bill", primary: true },
-        { text: "Why my bill is too high?", action: "bill_analysis", primary: true },
-        { text: "Technical Support", action: "tech_support", primary: true }
+        { text: "Sign In", action: "login", primary: true }
       ]
     });
+     
+    setTimeout(() => {
+      this.addBotMessage({
+        type: 'text',
+        text: "We'll resume our conversation after you sign-in. Opening a window for you to do that."
+      });
+    }, 1000);
+  
   }
 
   private handleWirelessService(): void {
