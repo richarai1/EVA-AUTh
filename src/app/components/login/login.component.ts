@@ -222,7 +222,7 @@ export class LoginComponent {
         this.authService.login(this.inputValue, this.inputValue).subscribe({
           next: (success) => {
             if (success) {
-              this.router.navigate(['/premier']);
+              this.router.navigate(['/home']);
               setTimeout(() => this.chatService.openChat(), 5000);
             } else {
               alert('Invalid credentials');
