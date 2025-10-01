@@ -10,8 +10,10 @@ export class ChatService {
   private messagesSubject = new BehaviorSubject<ChatMessage[]>([]);
   public messages$ = this.messagesSubject.asObservable();
   private userFlowContext: 'consumer' | 'small-business' = 'consumer';
+
   private viewBillUtterances = [
     "view my bill",
+    "view bill",
     "show my bill",
     "check my bill",
     "bill summary",
@@ -33,6 +35,7 @@ export class ChatService {
 // Natural language variations for "pay bill"
 private payBillUtterances = [
     "pay my bill",
+    "pay bill",
     "make a payment",
     "settle bill",
     "bill payment",
@@ -47,6 +50,11 @@ private payBillUtterances = [
     "pay account balance",
     "pay amount due"
 ];
+private billAnalysisUtterances = [
+  "why my bill is too high", "my bill is high","why bill is so high",
+  "bill analysis"
+];
+private userName ="";
   private isOpenSubject = new BehaviorSubject<boolean>(false);
   public isOpen$ = this.isOpenSubject.asObservable();
 
@@ -142,7 +150,11 @@ private payBillUtterances = [
   private initializeAuthenticatedChat(): void {
     const user = this.authService.currentUserValue;
     const userName = user.email.split('@')[0]; // Extract name from email
-    
+    if (this.userFlowContext === 'consumer' ) {
+    user.userName = "Richa Rai";
+    } else {
+     user.userName = "INSPECTOR DRAIN INC";
+    }
     const welcomeMessage: ChatMessage = {
       id: this.generateId(),
       isUser: false,
@@ -187,7 +199,8 @@ private payBillUtterances = [
 
   private processUserMessage(text: string): void {
     const lowerText = text.toLowerCase();
-
+    const matchesUtterances = (utterances: string[]) =>
+      utterances.some(u => lowerText.includes(u.toLowerCase()));
     if (this.currentStep === 'ban') {
       this.banNumber = text.trim();
       this.addBotMessage({
@@ -209,19 +222,17 @@ private payBillUtterances = [
       return;
     }
 
-    if (lowerText.includes('view bill') || lowerText.includes('bill summary')) {
+    if (matchesUtterances(this.viewBillUtterances)) {
       this.handleViewBillRequest();
-    } else if (lowerText.includes('why my bill is too high') || lowerText.includes('bill analysis')) {
+    } else if (matchesUtterances(this.billAnalysisUtterances)) {
       this.handleBillAnalysisRequest();
-    } else if (lowerText.includes('download bill') || lowerText.includes('download pdf')) {
+    } else if (matchesUtterances(["download bill", "download pdf"])) { // optional array
       this.handleDownloadBillRequest();
-    } else if (lowerText.includes('bill pay') || lowerText.includes('pay bill')) {
-      this.handleBillPayRequest();
-    } else if (lowerText.includes('pay') || lowerText.includes('payment')) {
+    } else if (matchesUtterances(this.payBillUtterances)) {
       this.handlePayBillRequest();
     } else if (/^\d+(\.\d{2})?$/.test(text.trim())) {
       this.handlePaymentAmount(parseFloat(text.trim()));
-    } else {
+    }  else {
       this.addBotMessage({
         type: 'text',
         text: "Can you tell me more about what you need help with?",
@@ -319,9 +330,9 @@ private payBillUtterances = [
       if (this.userFlowContext === 'small-business') {
         this.addBotMessage({
           type: 'text',
-          text: "You are an enterprise user. Please click to go to the enterprise page to manage your bill payments.",
+          text: "Please click here to make payment.",
           buttons: [
-            { text: "Go to Enterprise Page", action: "navigate_to_bills", primary: true }
+            { text: "Go to Payment Page", action: "navigate_to_bills", primary: true }
           ]
         });
       } else {
@@ -427,13 +438,33 @@ private payBillUtterances = [
 
   private showBillSummary(): void {
     if (this.userFlowContext === 'small-business') {
+      const billData: BillSummaryData = {
+        companyName: "Boeing Telecom",
+        companyAddress: "5834 BETHELVIEW RD\nCUMMING, GA 30040-6312",
+        pageInfo: "",
+        issueDate: "Sep 15, 2025",
+        accountNumber: this.banNumber || "287301224446",
+        foundationAccount: "59285142",
+        invoice: "287301224446X10092023",
+        totalDue: 6142.25,
+        dueDate: "Sep 15, 2025",
+        lastBill: 9466.04,
+        paymentAmount: 9466.04,
+        paymentDate: "Oct 1 - Thank you!",
+        remainingBalance: 0.00,
+        services: [
+          { name: "Wireless", amount: 6142.25 }
+        ],
+        totalServices: 6142.25
+      };
+
       this.addBotMessage({
-        type: 'text',
-        text: "I can help you with your business bill! Your current balance is $6,142.25 with a due date of Sep 15, 2025.\n\nFor detailed billing information including line-by-line charges, payment history, and service details, please visit the Bills page.",
+        type: 'bill-summary',
+        title: "📄 Your AT&T Bill Summary",
+        billData: billData,
         buttons: [
-          { text: "Go to Bills Page", action: "navigate_to_bills", primary: true },
           { text: "Download PDF", action: "download_pdf" },
-          { text: "Ask Another Question", action: "continue_chat" }
+          { text: "Pay Bill", action: "pay_bill_prompt" }
         ]
       });
     } else {
@@ -524,9 +555,9 @@ private payBillUtterances = [
         if (this.userFlowContext === 'small-business') {
           this.addBotMessage({
             type: 'text',
-            text: "To manage your bill payments, please visit the Bills page where you can view detailed billing information and make payments.",
+            text: "To manage your bill payments, please visit the payment page where you can view detailed billing information and make payments.",
             buttons: [
-              { text: "Go to Bills Page", action: "navigate_to_bills", primary: true }
+              { text: "Go to Payment Page", action: "navigate_to_bills", primary: true }
             ]
           });
         } else {
@@ -789,12 +820,16 @@ private payBillUtterances = [
     if (this.userFlowContext === 'small-business') {
       this.addBotMessage({
         type: 'text',
-        text: "📥 I can help you download your business bill!\n\nFor the complete billing document with all details, you can download the PDF from the Bills page where you'll find your current and past invoices.",
-        buttons: [
-          { text: "Go to Bills Page", action: "navigate_to_bills", primary: true },
-          { text: "Continue Chat", action: "continue_chat" }
-        ]
+        text: "Preparing your bill for download..."
       });
+
+      setTimeout(() => {
+        // In a real app, this would trigger an actual PDF download
+        this.addBotMessage({
+          type: 'text',
+          text: "Your bill has been downloaded successfully! Check your Downloads folder."
+        });
+      }, 1500);
     } else {
       // Simulate PDF download
       this.addBotMessage({
@@ -916,9 +951,9 @@ private payBillUtterances = [
         if (this.userFlowContext === 'small-business') {
           this.addBotMessage({
             type: 'text',
-            text: "You are an enterprise user. Please click to go to the enterprise page to manage your bill payments.",
+            text: "Please click her to pay bill.",
             buttons: [
-              { text: "Go to Enterprise Page", action: "navigate_to_bills", primary: true }
+              { text: "Payment Page", action: "navigate_to_bills", primary: true }
             ]
           });
         } else {
