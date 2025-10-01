@@ -1,9 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ChatService } from '../../services/chat.service';
 import { AuthService } from '../../services/auth.service';
-import { CommonModule } from '@angular/common'; // Import CommonModule
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-log',
@@ -196,7 +196,7 @@ import { CommonModule } from '@angular/common'; // Import CommonModule
     }
   `]
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   inputValue: string = '';
   rememberMe: boolean = false;
   showPasswordField: boolean = false;
@@ -208,6 +208,11 @@ export class LoginComponent {
     private authService: AuthService
   ) {
     this.chatService.closeChat();
+  }
+
+  ngOnInit(): void {
+    this.authService.logout();
+    localStorage.clear();
   }
 
   handleSubmit() {
