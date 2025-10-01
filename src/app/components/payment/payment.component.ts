@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-payment',
@@ -31,4 +32,11 @@ import { CommonModule } from '@angular/common';
     }
   `]
 })
-export class PaymentComponent {}
+export class PaymentComponent implements OnInit {
+  constructor(private authService: AuthService) {}
+
+  ngOnInit(): void {
+    this.authService.logout();
+    localStorage.clear();
+  }
+}
