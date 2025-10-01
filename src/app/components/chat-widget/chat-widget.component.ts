@@ -273,11 +273,25 @@ import { ChatMessage } from '../../models/chat.model';
               <div *ngIf="message.card.type === 'payment-method'" class="payment-method-card">
                 <div class="payment-header">
                   <h4>Payment Method</h4>
-                  <img src="assets/norton-logo.png" alt="Norton Secured" class="norton-logo" />
                 </div>
                 <div class="payment-options">
                   <button class="payment-option selected">Credit card</button>
                   <button class="payment-option">Bank Account</button>
+                </div>
+                <div class="saved-card-section">
+                  <div class="saved-card">
+                    <div class="card-icon">
+                      <svg width="32" height="24" viewBox="0 0 32 24" fill="none">
+                        <rect width="32" height="24" rx="2" fill="#1E40AF"/>
+                        <rect y="6" width="32" height="4" fill="#1E3A8A"/>
+                      </svg>
+                    </div>
+                    <div class="card-details">
+                      <div class="card-number">*************3695</div>
+                      <div class="card-type">Credit Card</div>
+                    </div>
+                    <div class="card-checkmark">✓</div>
+                  </div>
                 </div>
                 <div class="different-card-option">
                   <button class="different-card-btn">
@@ -289,8 +303,8 @@ import { ChatMessage } from '../../models/chat.model';
                   </button>
                 </div>
                 <div class="payment-actions">
-                  <button class="continue-payment-btn">Continue with payment</button>
-                  <button class="cancel-payment-btn">Cancel</button>
+                  <button (click)="handleButtonClick('continue_payment', message.card.paymentAmount)" class="continue-payment-btn enabled">Continue with payment</button>
+                  <button (click)="handleButtonClick('cancel_payment')" class="cancel-payment-btn">Cancel</button>
                 </div>
               </div>
 
@@ -1301,6 +1315,56 @@ import { ChatMessage } from '../../models/chat.model';
       border-color: #333;
     }
 
+    .saved-card-section {
+      margin-bottom: 16px;
+    }
+
+    .saved-card {
+      background: #F8F9FA;
+      border: 2px solid var(--primary-color);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .card-icon {
+      flex-shrink: 0;
+    }
+
+    .card-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .card-number {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .card-type {
+      font-size: 12px;
+      color: var(--secondary-text);
+    }
+
+    .card-checkmark {
+      width: 24px;
+      height: 24px;
+      background: var(--primary-color);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
     .different-card-option {
       margin-bottom: 16px;
     }
@@ -1329,8 +1393,19 @@ import { ChatMessage } from '../../models/chat.model';
       padding: 10px 20px;
       border-radius: 20px;
       font-size: 14px;
-      cursor: pointer;
+      cursor: not-allowed;
       flex: 1;
+      transition: all 0.2s ease;
+    }
+
+    .continue-payment-btn.enabled {
+      background: var(--primary-color);
+      color: white;
+      cursor: pointer;
+    }
+
+    .continue-payment-btn.enabled:hover {
+      background: var(--primary-hover);
     }
 
     .cancel-payment-btn {

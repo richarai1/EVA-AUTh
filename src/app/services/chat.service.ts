@@ -492,6 +492,10 @@ private payBillUtterances = [
         });
         break;
 
+      case 'continue_payment':
+        this.processSavedCardPayment(data);
+        break;
+
       case 'cancel_payment':
         this.addBotMessage({
           type: 'text',
@@ -680,6 +684,20 @@ private payBillUtterances = [
       case 'pay_with_amex': return 'American Express';
       default: return 'Card';
     }
+  }
+
+  private processSavedCardPayment(amount: number): void {
+    this.addBotMessage({
+      type: 'text',
+      text: "Processing your payment... Please wait."
+    });
+
+    setTimeout(() => {
+      this.addBotMessage({
+        type: 'text',
+        text: `Payment of $${amount.toFixed(2)} has been processed successfully using card ending in 3695! You should receive a confirmation email shortly.`
+      });
+    }, 2000);
   }
 
   private processPayment(data: any): void {
