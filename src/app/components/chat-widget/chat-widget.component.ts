@@ -1609,14 +1609,7 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
 
   sendMessage(): void {
     if (this.currentMessage.trim()) {
-      // Check if we're waiting for FAN or BAN input
-      if (this.chatService.isWaitingForFAN()) {
-        this.chatService.handleFANInput(this.currentMessage.trim());
-      } else if (this.chatService.isWaitingForBAN()) {
-        this.chatService.handleBANInput(this.currentMessage.trim());
-      } else {
-        this.chatService.sendMessage(this.currentMessage.trim());
-      }
+      this.chatService.sendMessage(this.currentMessage.trim());
       this.currentMessage = '';
       this.showWelcomeHeader = false;
     }
