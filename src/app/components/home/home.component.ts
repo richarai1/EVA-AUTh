@@ -63,6 +63,8 @@ export class HomeComponent implements OnInit {
   constructor(private chatService: ChatService) {}
 
   ngOnInit(): void {
+    this.chatService.setUserFlowContext('consumer');
+
     // Check if user just signed in and chat should be reopened
     const shouldReopenChat = sessionStorage.getItem('reopenChatAfterLogin');
     if (shouldReopenChat) {

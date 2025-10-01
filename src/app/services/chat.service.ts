@@ -9,6 +9,7 @@ import { ChatMessage, ChatCard, BillSummaryData } from '../models/chat.model';
 export class ChatService {
   private messagesSubject = new BehaviorSubject<ChatMessage[]>([]);
   public messages$ = this.messagesSubject.asObservable();
+  private userFlowContext: 'consumer' | 'small-business' = 'consumer';
   private viewBillUtterances = [
     "view my bill",
     "show my bill",
@@ -58,6 +59,14 @@ private payBillUtterances = [
   private banNumber: string = '';
 
   constructor(private authService: AuthService) {}
+
+  setUserFlowContext(context: 'consumer' | 'small-business'): void {
+    this.userFlowContext = context;
+  }
+
+  getUserFlowContext(): 'consumer' | 'small-business' {
+    return this.userFlowContext;
+  }
 
   openChat(): void {
     this.isOpenSubject.next(true);
@@ -479,10 +488,24 @@ private payBillUtterances = [
         break;
 
       case 'pay_bill_prompt':
-        this.addBotMessage({
-          type: 'text',
-          text: "How much do you want to pay? Feel free to enter a amount using only numbers."
-        });
+        if (this.userFlowContext === 'small-business') {
+          this.addBotMessage({
+            type: 'text',
+            text: "To manage your bill payments, please visit the Bills page where you can view detailed billing information and make payments.",
+            buttons: [
+              { text: "Go to Bills Page", action: "navigate_to_bills", primary: true }
+            ]
+          });
+        } else {
+          this.addBotMessage({
+            type: 'text',
+            text: "How much do you want to pay? Feel free to enter a amount using only numbers."
+          });
+        }
+        break;
+
+      case 'navigate_to_bills':
+        // This will be handled by the component to navigate to bills page
         break;
 
       case 'confirm_payment':

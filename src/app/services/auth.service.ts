@@ -8,6 +8,7 @@ import { User } from '../models/chat.model';
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<User>({ email: '', isAuthenticated: false });
   public currentUser$ = this.currentUserSubject.asObservable();
+  private redirectPath: string = '/home';
 
   constructor() {
     // Check if user is already logged in (localStorage)
@@ -15,6 +16,14 @@ export class AuthService {
     if (savedUser) {
       this.currentUserSubject.next(JSON.parse(savedUser));
     }
+  }
+
+  setRedirectPath(path: string): void {
+    this.redirectPath = path;
+  }
+
+  getRedirectPath(): string {
+    return this.redirectPath;
   }
 
   get currentUserValue(): User {

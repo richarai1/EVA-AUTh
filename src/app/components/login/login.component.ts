@@ -227,7 +227,8 @@ export class LoginComponent implements OnInit {
         this.authService.login(this.inputValue, this.inputValue).subscribe({
           next: (success) => {
             if (success) {
-             this.router.navigate(['/home']);
+              const redirectPath = this.authService.getRedirectPath();
+              this.router.navigate([redirectPath]);
             } else {
               alert('Invalid credentials');
             }
