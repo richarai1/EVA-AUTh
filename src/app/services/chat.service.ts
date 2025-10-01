@@ -342,98 +342,121 @@ private payBillUtterances = [
 
 
   private showBillAnalysis(): void {
-    // Simulate analyzing a large bill with many lines
-    const totalLines = 127; // Simulating a business account with many lines
-    const linesWithIncreases = 8;
-    const linesUnchanged = totalLines - linesWithIncreases;
-    
-    this.addBotMessage({
-      type: 'bill-analysis',
-      text: `I've analyzed your business account with ${totalLines} lines. Your bill has increased by $90.49 compared to the previous month.\n\nOut of ${totalLines} lines, ${linesWithIncreases} lines had changes while ${linesUnchanged} lines remained unchanged.\n\nHere are the key changes that contributed to the increase:`,
-      billBreakdown: [
-        {
-          lineNumber: "Line number 469.426.7221",
-          name: "ABIRAMI THIRUGNANASIVAM",
-          changeText: "Charges increased by $37.50",
-          changeAmount: 37.50,
-          details: [
-            "International Day Pass charges for three days ($36.00)",
-            "Monthly charges and taxes increased ($1.50)"
-          ]
-        },
-        {
-          lineNumber: "Line number 940.945.7123",
-          name: "SREELEKHA RAJAMANICKAM",
-          changeText: "New charges of $52.99",
-          changeAmount: 52.99,
-          details: [
-            "Activation Fee adjustments (charged and credited)",
-            "Prorated monthly charges for partial billing period",
-            "Surcharges, taxes & fees"
-          ]
-        },
-        {
-          lineNumber: "Line number 214.555.0123",
-          name: "BUSINESS LINE 3",
-          changeText: "Charges decreased by $5.00",
-          changeAmount: -5.00,
-          details: [
-            "Promotional discount applied",
-            "Reduced data overage charges"
-          ]
-        },
-        {
-          lineNumber: "Line number 214.555.0156",
-          name: "BUSINESS LINE 4",
-          changeText: "Charges increased by $15.00",
-          changeAmount: 15.00,
-          details: [
-            "Additional data usage charges ($12.00)",
-            "Premium feature activation ($3.00)"
-          ]
-        }
-      ],
-      currentTotal: "$441.28",
-      previousTotal: "$350.79",
-      totalIncrease: "+$90.49",
-      totalLines: totalLines,
-      linesWithIncreases: linesWithIncreases,
-      linesUnchanged: linesUnchanged,
-      autoPayInfo: "AutoPay is scheduled to charge your business account on 10/05/2025.",
-      additionalInfo: "For a complete line-by-line breakdown of all 127 lines, I can generate a detailed report. Would you like me to do that?"
-    });
+    if (this.userFlowContext === 'small-business') {
+      this.addBotMessage({
+        type: 'text',
+        text: "📊 I can help you understand why your business bill is higher!\n\nYour bill increased by $90.49 compared to last month. The main factors include:\n\n• International Day Pass charges on some lines\n• New line activations with prorated charges\n• Additional data usage on several lines\n\nFor a complete line-by-line analysis of all charges across your 127 business lines, please visit the Bills page where you can see detailed breakdowns, usage patterns, and historical comparisons.",
+        buttons: [
+          { text: "Go to Bills Page", action: "navigate_to_bills", primary: true },
+          { text: "Ask Another Question", action: "continue_chat" }
+        ]
+      });
+    } else {
+      // Simulate analyzing a large bill with many lines
+      const totalLines = 127; // Simulating a business account with many lines
+      const linesWithIncreases = 8;
+      const linesUnchanged = totalLines - linesWithIncreases;
+
+      this.addBotMessage({
+        type: 'bill-analysis',
+        text: `I've analyzed your business account with ${totalLines} lines. Your bill has increased by $90.49 compared to the previous month.\n\nOut of ${totalLines} lines, ${linesWithIncreases} lines had changes while ${linesUnchanged} lines remained unchanged.\n\nHere are the key changes that contributed to the increase:`,
+        billBreakdown: [
+          {
+            lineNumber: "Line number 469.426.7221",
+            name: "ABIRAMI THIRUGNANASIVAM",
+            changeText: "Charges increased by $37.50",
+            changeAmount: 37.50,
+            details: [
+              "International Day Pass charges for three days ($36.00)",
+              "Monthly charges and taxes increased ($1.50)"
+            ]
+          },
+          {
+            lineNumber: "Line number 940.945.7123",
+            name: "SREELEKHA RAJAMANICKAM",
+            changeText: "New charges of $52.99",
+            changeAmount: 52.99,
+            details: [
+              "Activation Fee adjustments (charged and credited)",
+              "Prorated monthly charges for partial billing period",
+              "Surcharges, taxes & fees"
+            ]
+          },
+          {
+            lineNumber: "Line number 214.555.0123",
+            name: "BUSINESS LINE 3",
+            changeText: "Charges decreased by $5.00",
+            changeAmount: -5.00,
+            details: [
+              "Promotional discount applied",
+              "Reduced data overage charges"
+            ]
+          },
+          {
+            lineNumber: "Line number 214.555.0156",
+            name: "BUSINESS LINE 4",
+            changeText: "Charges increased by $15.00",
+            changeAmount: 15.00,
+            details: [
+              "Additional data usage charges ($12.00)",
+              "Premium feature activation ($3.00)"
+            ]
+          }
+        ],
+        currentTotal: "$441.28",
+        previousTotal: "$350.79",
+        totalIncrease: "+$90.49",
+        totalLines: totalLines,
+        linesWithIncreases: linesWithIncreases,
+        linesUnchanged: linesUnchanged,
+        autoPayInfo: "AutoPay is scheduled to charge your business account on 10/05/2025.",
+        additionalInfo: "For a complete line-by-line breakdown of all 127 lines, I can generate a detailed report. Would you like me to do that?"
+      });
+    }
   }
 
   private showBillSummary(): void {
-    const billData: BillSummaryData = {
-      companyName: "Boeing Telecom",
-      companyAddress: "5834 BETHELVIEW RD\nCUMMING, GA 30040-6312",
-      pageInfo: "",
-      issueDate: "Sep 15, 2025",
-      accountNumber: this.banNumber || "287301224446",
-      foundationAccount: "59285142",
-      invoice: "287301224446X10092023",
-      totalDue: 6142.25,
-      dueDate: "Sep 15, 2025",
-      lastBill: 9466.04,
-      paymentAmount: 9466.04,
-      paymentDate: "Oct 1 - Thank you!",
-      remainingBalance: 0.00,
-      services: [
-        { name: "Wireless", amount: 6142.25 }
-      ],
-      totalServices: 6142.25
-    };
+    if (this.userFlowContext === 'small-business') {
+      this.addBotMessage({
+        type: 'text',
+        text: "I can help you with your business bill! Your current balance is $6,142.25 with a due date of Sep 15, 2025.\n\nFor detailed billing information including line-by-line charges, payment history, and service details, please visit the Bills page.",
+        buttons: [
+          { text: "Go to Bills Page", action: "navigate_to_bills", primary: true },
+          { text: "Download PDF", action: "download_pdf" },
+          { text: "Ask Another Question", action: "continue_chat" }
+        ]
+      });
+    } else {
+      const billData: BillSummaryData = {
+        companyName: "Boeing Telecom",
+        companyAddress: "5834 BETHELVIEW RD\nCUMMING, GA 30040-6312",
+        pageInfo: "",
+        issueDate: "Sep 15, 2025",
+        accountNumber: this.banNumber || "287301224446",
+        foundationAccount: "59285142",
+        invoice: "287301224446X10092023",
+        totalDue: 6142.25,
+        dueDate: "Sep 15, 2025",
+        lastBill: 9466.04,
+        paymentAmount: 9466.04,
+        paymentDate: "Oct 1 - Thank you!",
+        remainingBalance: 0.00,
+        services: [
+          { name: "Wireless", amount: 6142.25 }
+        ],
+        totalServices: 6142.25
+      };
 
-    this.addBotMessage({
-      type: 'bill-summary',
-      title: "📄 Your AT&T Bill Summary",
-      billData: billData,
-      buttons: [
-        { text: "Download PDF", action: "download_pdf" },
-        { text: "Pay Bill", action: "pay_bill_prompt" }
-      ]
-    });
+      this.addBotMessage({
+        type: 'bill-summary',
+        title: "📄 Your AT&T Bill Summary",
+        billData: billData,
+        buttons: [
+          { text: "Download PDF", action: "download_pdf" },
+          { text: "Pay Bill", action: "pay_bill_prompt" }
+        ]
+      });
+    }
   }
 
   handleButtonClick(action: string, data?: any): void {
@@ -506,6 +529,19 @@ private payBillUtterances = [
 
       case 'navigate_to_bills':
         // This will be handled by the component to navigate to bills page
+        break;
+
+      case 'continue_chat':
+        this.addBotMessage({
+          type: 'text',
+          text: "How else can I help you today?",
+          buttons: [
+            { text: "View Bill", action: "view_bill", primary: true },
+            { text: "Pay Bill", action: "pay_bill_prompt", primary: true },
+            { text: "Download Bill", action: "download_pdf", primary: true },
+            { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
+          ]
+        });
         break;
 
       case 'confirm_payment':
@@ -740,19 +776,30 @@ private payBillUtterances = [
   }
 
   private handleDownloadPdf(): void {
-    // Simulate PDF download
-    this.addBotMessage({
-      type: 'text',
-      text: "Preparing your bill for download..."
-    });
-
-    setTimeout(() => {
-      // In a real app, this would trigger an actual PDF download
+    if (this.userFlowContext === 'small-business') {
       this.addBotMessage({
         type: 'text',
-        text: "Your bill has been downloaded successfully! Check your Downloads folder."
+        text: "📥 I can help you download your business bill!\n\nFor the complete billing document with all details, you can download the PDF from the Bills page where you'll find your current and past invoices.",
+        buttons: [
+          { text: "Go to Bills Page", action: "navigate_to_bills", primary: true },
+          { text: "Continue Chat", action: "continue_chat" }
+        ]
       });
-    }, 1500);
+    } else {
+      // Simulate PDF download
+      this.addBotMessage({
+        type: 'text',
+        text: "Preparing your bill for download..."
+      });
+
+      setTimeout(() => {
+        // In a real app, this would trigger an actual PDF download
+        this.addBotMessage({
+          type: 'text',
+          text: "Your bill has been downloaded successfully! Check your Downloads folder."
+        });
+      }, 1500);
+    }
   }
 
   private addBotMessage(card: ChatCard): void {
