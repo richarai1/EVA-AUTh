@@ -316,10 +316,20 @@ private payBillUtterances = [
 
   private handlePayBillRequest(): void {
     if (this.authService.isAuthenticated()) {
-      this.addBotMessage({
-        type: 'text',
-        text: "Please enter the amount you want to pay:"
-      });
+      if (this.userFlowContext === 'small-business') {
+        this.addBotMessage({
+          type: 'text',
+          text: "You are an enterprise user. Please click to go to the enterprise page to manage your bill payments.",
+          buttons: [
+            { text: "Go to Enterprise Page", action: "navigate_to_bills", primary: true }
+          ]
+        });
+      } else {
+        this.addBotMessage({
+          type: 'text',
+          text: "Please enter the amount you want to pay:"
+        });
+      }
     } else {
       this.pendingAction = 'pay_bill';
       sessionStorage.setItem('reopenChatAfterLogin', 'true');
@@ -903,10 +913,20 @@ private payBillUtterances = [
       }, 1500); // Increased to 1.5 seconds
     } else if (this.pendingAction === 'pay_bill' || this.lastUserQuestion.toLowerCase().includes('pay')) {
       setTimeout(() => {
-        this.addBotMessage({
-          type: 'text',
-          text: "Please enter the amount you want to pay:"
-        });
+        if (this.userFlowContext === 'small-business') {
+          this.addBotMessage({
+            type: 'text',
+            text: "You are an enterprise user. Please click to go to the enterprise page to manage your bill payments.",
+            buttons: [
+              { text: "Go to Enterprise Page", action: "navigate_to_bills", primary: true }
+            ]
+          });
+        } else {
+          this.addBotMessage({
+            type: 'text',
+            text: "Please enter the amount you want to pay:"
+          });
+        }
         this.clearPendingState();
       }, 1500); // Increased to 1.5 seconds
     } else {
