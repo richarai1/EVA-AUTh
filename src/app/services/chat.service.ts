@@ -9,20 +9,53 @@ import { ChatMessage, ChatCard, BillSummaryData } from '../models/chat.model';
 export class ChatService {
   private messagesSubject = new BehaviorSubject<ChatMessage[]>([]);
   public messages$ = this.messagesSubject.asObservable();
+  private viewBillUtterances = [
+    "view my bill",
+    "show my bill",
+    "check my bill",
+    "bill summary",
+    "can I see my bill",
+    "show me my bill",
+    "I want to see my bill",
+    "display my bill",
+    "what's my bill",
+    "latest bill",
+    "recent bill",
+    "billing info",
+    "bill details",
+    "see charges",
+    "how much do I owe",
+    "bill amount",
+    "get my bill"
+];
 
+// Natural language variations for "pay bill"
+private payBillUtterances = [
+    "pay my bill",
+    "make a payment",
+    "settle bill",
+    "bill payment",
+    "I'd like to pay my bill",
+    "please pay my bill",
+    "pay now",
+    "pay outstanding",
+    "clear my bill",
+    "pay charges",
+    "make bill payment",
+    "settle outstanding",
+    "pay account balance",
+    "pay amount due"
+];
   private isOpenSubject = new BehaviorSubject<boolean>(false);
   public isOpen$ = this.isOpenSubject.asObservable();
 
   private lastUserQuestion: string = '';
   private lastUserMessage: ChatMessage | null = null;
   private pendingAction: string = '';
-  private selectedFAN: string = '';
-  private selectedBAN: string = '';
-  private selectedCompanyName: string = '';
-  private fanAttempts: number = 0;
-  private banAttempts: number = 0;
-  private waitingForFAN: boolean = false;
-  private waitingForBAN: boolean = false;
+
+  private currentStep:  'ban' | null = null;
+
+  private banNumber: string = '';
 
   constructor(private authService: AuthService) {}
 
@@ -145,6 +178,27 @@ export class ChatService {
 
   private processUserMessage(text: string): void {
     const lowerText = text.toLowerCase();
+
+    if (this.currentStep === 'ban') {
+      this.banNumber = text.trim();
+      this.addBotMessage({
+        type: 'text',
+        text: `Thank you. BAN set to ${this.banNumber}.`
+      });
+      this.currentStep = null;
+      setTimeout(() => {
+        if (this.lastUserMessage) {
+          const currentMessages = this.messagesSubject.value;
+          this.messagesSubject.next([...currentMessages, this.lastUserMessage!]);
+          setTimeout(() => {
+            this.executeUserRequest();
+          }, 1500);
+        } else {
+          this.executeUserRequest();
+        }
+      }, 500);
+      return;
+    }
 
     if (lowerText.includes('view bill') || lowerText.includes('bill summary')) {
       this.handleViewBillRequest();
@@ -343,11 +397,11 @@ export class ChatService {
 
   private showBillSummary(): void {
     const billData: BillSummaryData = {
-      companyName: "INSPECTOR DRAIN INC",
+      companyName: "Boeing Telecom",
       companyAddress: "5834 BETHELVIEW RD\nCUMMING, GA 30040-6312",
       pageInfo: "",
       issueDate: "Sep 15, 2025",
-      accountNumber: "287301224446",
+      accountNumber: this.banNumber || "287301224446",
       foundationAccount: "59285142",
       invoice: "287301224446X10092023",
       totalDue: 6142.25,
@@ -378,77 +432,97 @@ export class ChatService {
       case 'help_shop':
         this.handleShoppingRequest();
         break;
-  
+
       case 'need_support':
         this.handleSupportRequest();
         break;
-  
+
       case 'view_bill':
         this.handleViewBillRequest();
         break;
-  
+
       case 'bill_analysis':
         this.handleBillAnalysisRequest();
         break;
-  
+
       case 'download_bill':
         this.handleDownloadBillRequest();
         break;
-  
+
       case 'pay_bill':
         this.handlePayBillRequest();
         break;
-  
+
       case 'service_wireless':
         this.handleWirelessService();
         break;
-  
+
       case 'service_internet':
         this.handleInternetService();
         break;
-  
+
       case 'service_wireless_authenticated':
         this.handleWirelessServiceAuthenticated();
         break;
-  
+
       case 'service_internet_authenticated':
         this.handleInternetServiceAuthenticated();
         break;
-  
+
       case 'login':
-        // Component handles navigation to login
+        // This will be handled by the component to navigate to login
         break;
-  
+
+
       case 'download_pdf':
         this.handleDownloadPdf();
         break;
-  
+
       case 'pay_bill_prompt':
+        this.addBotMessage({
+          type: 'text',
+          text: "How much do you want to pay? Feel free to enter a amount using only numbers."
+        });
+        break;
+
       case 'confirm_payment':
         this.addBotMessage({
           type: 'text',
-          text: "Please enter the amount you want to pay using only numbers."
+          text: "How much do you want to pay?\n\nFeel free to enter a amount using only numbers."
         });
         break;
-  
+
       case 'cancel_payment':
         this.addBotMessage({
           type: 'text',
           text: "No problem! Is there anything else I can help you with today?"
         });
         break;
-  
+
       case 'pay_with_visa':
       case 'pay_with_mastercard':
       case 'pay_with_discover':
       case 'pay_with_amex':
         this.showCardDetailsForm(action, data);
         break;
-  
+
       case 'submit_payment':
         this.processPayment(data);
         break;
-  
+
+     
+
+      case 'show_ban_help':
+        this.addBotMessage({
+          type: 'text',
+          text: "You can find your Billing Account Number (BAN) in your myAT&T profile under 'My linked accounts', or on your AT&T bill in the account summary section, usually in the upper right-hand corner of any bill or invoice."
+        });
+        // Re-ask for BAN after showing help
+        setTimeout(() => {
+          this.askForBAN();
+        }, 1000);
+        break;
+
       default:
         this.addBotMessage({
           type: 'text',
@@ -462,7 +536,6 @@ export class ChatService {
         });
     }
   }
-  
 
   private handleShoppingRequest(): void {
     this.addBotMessage({
@@ -629,14 +702,14 @@ export class ChatService {
     // Simulate PDF download
     this.addBotMessage({
       type: 'text',
-      text: "📥 Preparing your bill for download..."
+      text: "Preparing your bill for download..."
     });
 
     setTimeout(() => {
       // In a real app, this would trigger an actual PDF download
       this.addBotMessage({
         type: 'text',
-        text: "✅ Your bill has been downloaded successfully! Check your Downloads folder."
+        text: "Your bill has been downloaded successfully! Check your Downloads folder."
       });
     }, 1500);
   }
@@ -657,56 +730,43 @@ export class ChatService {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
   }
 
-  // Public methods to check waiting states
-  isWaitingForFAN(): boolean {
-    return this.waitingForFAN;
-  }
-
-  isWaitingForBAN(): boolean {
-    return this.waitingForBAN;
-  }
-
   resetChat(): void {
     this.messagesSubject.next([]);
     this.lastUserQuestion = '';
     this.pendingAction = '';
-    this.waitingForFAN = false;
-    this.waitingForBAN = false;
-    this.fanAttempts = 0;
-    this.banAttempts = 0;
     this.initializeChat();
   }
 
   // Method to reinitialize chat after login
   reinitializeAfterLogin(): void {
-    // Step 1: Immediately acknowledge sign-in
-    this.showSignedInStatus();
-    
-    // Step 2: After 700-900ms, add friendly acknowledgement
-    setTimeout(() => {
-      this.addBotMessage({
-        type: 'text',
-        text: 'Great — thanks for signing in! I\'ll pick up where we left off.'
-      });
-      
-      // Step 3: Re-insert user's last message if available
-      if (this.lastUserMessage) {
+    // Only proceed if we haven't already reinitialized
+    if (this.pendingAction || this.lastUserMessage) {
+      // Add the "Great! Thanks for signing in" message with delay
+      setTimeout(() => {
+        this.addBotMessage({
+          type: 'text',
+          text: 'Great! Thanks for signing in.'
+        });
+        
+        // Start the FAN/BAN flow
         setTimeout(() => {
-          const currentMessages = this.messagesSubject.value;
-          this.messagesSubject.next([...currentMessages, this.lastUserMessage!]);
-          
-          // Step 4: Ask for account verification after 800ms
-          setTimeout(() => {
-            this.askForAccountVerification();
-          }, 800);
-        }, 600);
-      } else {
-        // No last message, go straight to account verification
-        setTimeout(() => {
-          this.askForAccountVerification();
-        }, 600);
-      }
-    }, 800);
+          this.askForBAN();
+        }, 1200); // Increased to 1.2 seconds before asking for FAN
+      }, 800); // Increased to 0.8 seconds before "Great! Thanks for signing in"
+    }
+  }
+
+ 
+
+  private askForBAN(): void {
+    this.currentStep = 'ban';
+    this.addBotMessage({
+      type: 'text',
+      text: "Now, please enter your Billing Account Number (BAN):",
+      buttons: [
+        { text: "How to find my BAN?", action: "show_ban_help", primary: false }
+      ]
+    });
   }
 
   // Add method to show signed in status
@@ -723,60 +783,6 @@ export class ChatService {
 
     const currentMessages = this.messagesSubject.value;
     this.messagesSubject.next([...currentMessages, statusMessage]);
-  }
-
-  // Method to ask for account verification
-  private askForAccountVerification(): void {
-    setTimeout(() => {
-      this.addBotMessage({
-        type: 'text',
-        text: 'To help with your request, I need to verify your account. Please provide your Foundation Account Number (FAN).',
-        buttons: [
-          { text: "I know my FAN", action: "provide_fan", primary: true },
-          { text: "I don't know my FAN", action: "show_fan_options" }
-        ]
-      });
-    }, 800);
-  }
-
-  private showFANInputForm(): void {
-    this.addBotMessage({
-      type: 'form',
-      title: 'Foundation Account Number',
-      text: 'Please enter your Foundation Account Number (FAN):',
-      formFields: [
-        { 
-          label: 'FAN Number', 
-          type: 'text', 
-          name: 'fanNumber', 
-          placeholder: 'Enter 8-digit FAN number' 
-        }
-      ],
-      buttons: [
-        { text: 'Submit', action: 'submit_fan', primary: true },
-        { text: 'Cancel', action: 'cancel_verification' }
-      ]
-    });
-  }
-
-  private showBANInputForm(): void {
-    this.addBotMessage({
-      type: 'form',
-      title: 'Billing Account Number',
-      text: 'Please enter your Billing Account Number (BAN):',
-      formFields: [
-        { 
-          label: 'BAN Number', 
-          type: 'text', 
-          name: 'banNumber', 
-          placeholder: 'Enter 12-digit BAN number' 
-        }
-      ],
-      buttons: [
-        { text: 'Submit', action: 'submit_ban', primary: true },
-        { text: 'Cancel', action: 'cancel_verification' }
-      ]
-    });
   }
 
   // Execute the user's original request after sign-in
@@ -838,57 +844,5 @@ export class ChatService {
     this.pendingAction = '';
     this.lastUserMessage = null;
     this.lastUserQuestion = '';
-    this.selectedFAN = '';
-    this.selectedBAN = '';
-    this.selectedCompanyName = '';
-    this.waitingForFAN = false;
-    this.waitingForBAN = false;
-    this.fanAttempts = 0;
-    this.banAttempts = 0;
   }
-
-  public handleFANInput(fanInput: string): void {
-    // Validate FAN (8 digits)
-    if (!/^\d{8}$/.test(fanInput)) {
-      this.addBotMessage({
-        type: 'text',
-        text: 'Please enter a valid 8-digit FAN number.'
-      });
-      return;
-    }
-  
-    this.selectedFAN = fanInput;
-  
-    this.addBotMessage({
-      type: 'text',
-      text: `Great! Now please type your Billing Account Number (BAN) directly in the chat.`
-    });
-  }
-  
-
-  public handleBANInput(banInput: string): void {
-    // Validate BAN (12 digits)
-    if (!/^\d{12}$/.test(banInput)) {
-      this.addBotMessage({
-        type: 'text',
-        text: 'Please enter a valid 12-digit BAN number.'
-      });
-      return;
-    }
-  
-    this.selectedBAN = banInput;
-  
-    // Confirm account and resume actions
-    this.addBotMessage({
-      type: 'text',
-      text: `Perfect! I've verified your account:\nFAN: ${this.selectedFAN}\nBAN: ${this.selectedBAN}\nCompany: ${this.selectedCompanyName || 'Your Company'}\n\nWhat would you like to do?`,
-      buttons: [
-        { text: "View Bill", action: "view_bill", primary: true },
-        { text: "Pay Bill", action: "pay_bill", primary: true },
-        { text: "Download Bill", action: "download_bill", primary: true },
-        { text: "Bill Analysis", action: "bill_analysis", primary: true }
-      ]
-    });
-  }
-  
 }
