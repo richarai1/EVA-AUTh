@@ -39,7 +39,7 @@ import { ChatMessage } from '../../models/chat.model';
 
       <!-- Welcome Header (only shown for authenticated users at start) -->
       <div *ngIf="showWelcomeHeader && isAuthenticated" class="welcome-header">
-        <h2 class="welcome-title">Welcome<br>INSPECTOR DRAIN INC</h2>
+        <h2 class="welcome-title">Welcome<br>{{ userName }}</h2>
         <p class="welcome-time">{{ getCurrentTime() }}</p>
       </div>
 
@@ -402,7 +402,7 @@ import { ChatMessage } from '../../models/chat.model';
       right: 0;
       width: 400px;
       max-width: calc(100vw - 2rem);
-      height: 600px;
+      height: 800px;
       background: var(--background-color);
       border-radius: 8px 8px 0 0;
       box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
@@ -1629,7 +1629,7 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
   showWelcomeHeader = true;
   showSignedInStatus = false;
   isAuthenticated = false;
-  
+  userName = '';
   private subscriptions: Subscription[] = [];
 
   constructor(
@@ -1654,7 +1654,7 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
       this.authService.currentUser$.subscribe(user => {
         const wasNotAuthenticated = !this.isAuthenticated;
         this.isAuthenticated = user.isAuthenticated;
-        
+        this.userName=user.userName;
         // Only trigger sign-in flow if we're not already handling it via home component
         if (user.isAuthenticated && this.isOpen && wasNotAuthenticated && !sessionStorage.getItem('reopenChatAfterLogin')) {
           // Add the signed in status message to chat
