@@ -78,7 +78,7 @@ export interface BillSummaryData {
   companyAddress: string;
   pageInfo: string;
   issueDate: string;
-  accountNumber: string;
+  accountNumber: any;
   foundationAccount: string;
   invoice: string;
   totalDue: number;
