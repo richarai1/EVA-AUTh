@@ -81,16 +81,53 @@ private payBillUtterances = [
   }
 
   private initializeGuestChat(): void {
-    const welcomeMessage: ChatMessage = {
-      id: this.generateId(),
-      isUser: false,
-      timestamp: new Date(),
-      card: {
-        type: 'text',
-        text: "Welcome! How can I help you today?"
-      }
-    };
-    this.messagesSubject.next([welcomeMessage]);
+    // Show business security notice first
+    
+
+    // Show connection status
+    setTimeout(() => {
+      const connectionMessage: ChatMessage = {
+        id: this.generateId(),
+        isUser: false,
+        timestamp: new Date(),
+        card: {
+          type: 'connection-status',
+          text: "Hi there! \n Let's get you some help. Please select an option so I can connect you."
+        }
+      };
+      const currentMessages = this.messagesSubject.value;
+      this.messagesSubject.next([...currentMessages, connectionMessage]);
+
+      // Show main options after connection
+      setTimeout(() => {
+        const optionsMessage: ChatMessage = {
+          id: this.generateId(),
+          isUser: false,
+          timestamp: new Date(),
+          card: {
+            type: 'option-cards',
+            options: [
+              {
+                title: "Help me shop",
+                description: "I'm looking for a new phone, plan, line or protection.",
+                iconUrl: "https://www.att.com/scmsassets/global/icons/svg/retail-financial/pictogram_shopping-bag_96.svg",
+                action: "help_shop"
+              },
+              {
+                title: "I need support",
+                description: "Get help with my phone, account or bill.",
+                iconUrl: "https://www.att.com/scmsassets/global/icons/svg/people/pictogram_handshake_96.svg",
+                action: "need_support"
+              }
+            ]
+          }
+        };
+        const messages = this.messagesSubject.value;
+        this.messagesSubject.next([...messages, optionsMessage]);
+      }, 2000);
+    }, 1000);
+
+   
   }
 
   private initializeAuthenticatedChat(): void {
@@ -163,16 +200,14 @@ private payBillUtterances = [
       return;
     }
 
-    if (lowerText.includes('why') && (lowerText.includes('bill') && lowerText.includes('higher') || lowerText.includes('bill higher'))) {
-      this.handleWhyBillHigherRequest();
-    } else if (lowerText.includes('view bill') || lowerText.includes('bill summary')) {
+    if (lowerText.includes('view bill') || lowerText.includes('bill summary')) {
       this.handleViewBillRequest();
     } else if (lowerText.includes('why my bill is too high') || lowerText.includes('bill analysis')) {
       this.handleBillAnalysisRequest();
     } else if (lowerText.includes('download bill') || lowerText.includes('download pdf')) {
       this.handleDownloadBillRequest();
     } else if (lowerText.includes('bill pay') || lowerText.includes('pay bill')) {
-      this.handlePayBillWithLinkRequest();
+      this.handleBillPayRequest();
     } else if (lowerText.includes('pay') || lowerText.includes('payment')) {
       this.handlePayBillRequest();
     } else if (/^\d+(\.\d{2})?$/.test(text.trim())) {
@@ -180,7 +215,13 @@ private payBillUtterances = [
     } else {
       this.addBotMessage({
         type: 'text',
-        text: "Can you tell me more about what you need help with?"
+        text: "Can you tell me more about what you need help with?",
+        buttons: [
+          { text: "View Bill", action: "view_bill", primary: true },
+          { text: "Pay Bill", action: "pay_bill", primary: true },
+          { text: "Download Bill", action: "download_bill", primary: true },
+          { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
+        ]
       });
     }
   }
@@ -264,42 +305,6 @@ private payBillUtterances = [
     });
   }
 
-  private handleWhyBillHigherRequest(): void {
-    if (!this.authService.isAuthenticated()) {
-      this.pendingAction = 'bill_analysis';
-      this.addBotMessage({
-        type: 'text',
-        text: "To view your bill details, please sign in first.",
-        buttons: [
-          { text: "Sign In", action: "login", primary: true }
-        ]
-      });
-    } else {
-      this.handleBillAnalysisRequest();
-    }
-  }
-
-  private handlePayBillWithLinkRequest(): void {
-    if (!this.authService.isAuthenticated()) {
-      this.pendingAction = 'pay_bill';
-      this.addBotMessage({
-        type: 'text',
-        text: "To make a payment, please sign in first.",
-        buttons: [
-          { text: "Sign In", action: "login", primary: true }
-        ]
-      });
-    } else {
-      this.addBotMessage({
-        type: 'text',
-        text: "You can make a payment here:",
-        buttons: [
-          { text: "Go to Payment Page", action: "navigate_payment", primary: true }
-        ]
-      });
-    }
-  }
-
   private handlePayBillRequest(): void {
     if (this.authService.isAuthenticated()) {
       this.addBotMessage({
@@ -316,7 +321,7 @@ private payBillUtterances = [
           { text: "Sign In", action: "login", primary: true }
         ]
       });
-
+      
       setTimeout(() => {
         this.addBotMessage({
           type: 'text',
@@ -516,10 +521,6 @@ private payBillUtterances = [
         setTimeout(() => {
           this.askForBAN();
         }, 1000);
-        break;
-
-      case 'navigate_payment':
-        // This will be handled by the component to navigate to payment page
         break;
 
       default:
