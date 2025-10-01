@@ -1618,6 +1618,9 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
   handleButtonClick(action: string, data?: any): void {
     if (action === 'login') {
       this.router.navigate(['/login']);
+    } else if (action === 'navigate_payment') {
+      this.router.navigate(['/payment']);
+      this.chatService.closeChat();
     } else {
       this.chatService.handleButtonClick(action, data);
     }
