@@ -62,9 +62,13 @@ private userName ="";
   private lastUserMessage: ChatMessage | null = null;
   private pendingAction: string = '';
 
-  private currentStep:  'ban' | null = null;
+  private currentStep:  'ban' | 'account_selection' | 'payment_amount' | 'payment_method' | null = null;
 
   private banNumber: string = '';
+  private selectedAccount: string = '';
+  private selectedAccountName: string = '';
+  private selectedAccountBalance: string = '';
+  private paymentAmount: string = '';
 
   constructor(private authService: AuthService) {}
 
@@ -480,8 +484,10 @@ private userName ="";
       const billData: BillSummaryData = {
         companyName: "AT&T Consumer",
         companyAddress: "123 Main Street\nDallas, TX 75201",
+        pageInfo: "",
         issueDate: "Sep 15, 2025",
         accountNumber: "****5678",
+        foundationAccount: "",
         invoice: "INV20250915",
         totalDue: 125.50,
         dueDate: "Oct 05, 2025",
@@ -626,6 +632,38 @@ private userName ="";
         break;
 
      
+
+      case 'select_account_1':
+        this.handleAccountSelection('00060030', 'LENNER CORPORATE CTR-CCDA MAC CRU', '$0.00');
+        break;
+
+      case 'select_account_2':
+        this.handleAccountSelection('287237545598', 'LENNER CORPORATE CTR', '$64.55');
+        break;
+
+      case 'select_account_3':
+        this.handleAccountSelection('287242788082', 'LENNER CORPORATION', '$10.15');
+        break;
+
+      case 'select_account_pay_2':
+        this.handleAccountSelectionForPayment('287237545598', 'LENNER CORPORATE CTR', '64.55');
+        break;
+
+      case 'select_account_pay_3':
+        this.handleAccountSelectionForPayment('287242788082', 'LENNER CORPORATION', '10.15');
+        break;
+
+      case 'pay_full_amount':
+        this.handlePaymentAmountSelection('full');
+        break;
+
+      case 'enter_other_amount':
+        this.handlePaymentAmountSelection('other');
+        break;
+
+      case 'add_new_payment_method':
+        this.handleAddNewPaymentMethod();
+        break;
 
       case 'show_ban_help':
         this.addBotMessage({
@@ -912,6 +950,94 @@ private userName ="";
     });
   }
 
+  private askForAccountSelection(context: 'view_bill' | 'pay_bill'): void {
+    this.currentStep = 'account_selection';
+    this.pendingAction = context;
+
+    const messageText = context === 'view_bill'
+      ? 'Sure, I can help you with that. Which account would you like to see?'
+      : 'Sure, let\'s schedule your payment. Which account do you want to pay?';
+
+    const buttons = context === 'view_bill'
+      ? [
+          { text: 'Account: 00060030 – LENNER CORPORATE CTR-CCDA MAC CRU', action: 'select_account_1', primary: true },
+          { text: 'Account: 287237545598 – LENNER CORPORATE CTR', action: 'select_account_2', primary: true },
+          { text: 'Account: 287242788082 – LENNER CORPORATION', action: 'select_account_3', primary: true }
+        ]
+      : [
+          { text: '287237545598 – LENNER CORPORATE CTR ($64.55 due)', action: 'select_account_pay_2', primary: true },
+          { text: '287242788082 – LENNER CORPORATION ($10.15 due)', action: 'select_account_pay_3', primary: true }
+        ];
+
+    this.addBotMessage({
+      type: 'text',
+      text: messageText,
+      buttons: buttons
+    });
+  }
+
+  private handleAccountSelection(accountNumber: string, accountName: string, balance: string): void {
+    this.selectedAccount = accountNumber;
+    this.selectedAccountName = accountName;
+    this.selectedAccountBalance = balance;
+
+    this.addBotMessage({
+      type: 'text',
+      text: `Here's your bill summary for Account ${accountNumber} (${accountName}):\n\nBalance Forward: ${balance}\n\nCurrent Charges: $0.00\n\nTotal Amount Due: ${balance}\n\nBill Due Date: 09/23/2025\n\n👉 Would you like to download the bill PDF or make a payment?`,
+      buttons: [
+        { text: 'Download PDF', action: 'download_pdf', primary: true },
+        { text: 'Pay Bill', action: 'pay_bill_prompt', primary: true }
+      ]
+    });
+  }
+
+  private handleAccountSelectionForPayment(accountNumber: string, accountName: string, amount: string): void {
+    this.selectedAccount = accountNumber;
+    this.selectedAccountName = accountName;
+    this.selectedAccountBalance = amount;
+    this.currentStep = 'payment_amount';
+
+    this.addBotMessage({
+      type: 'text',
+      text: `Great! Your total amount due is $${amount}, and payment is due by 09/23/2025.\n\nHow would you like to continue?`,
+      buttons: [
+        { text: `Pay Full Amount ($${amount})`, action: 'pay_full_amount', primary: true },
+        { text: 'Enter Other Amount', action: 'enter_other_amount', primary: true }
+      ]
+    });
+  }
+
+  private handlePaymentAmountSelection(type: 'full' | 'other'): void {
+    if (type === 'full') {
+      this.paymentAmount = this.selectedAccountBalance;
+      this.currentStep = 'payment_method';
+
+      this.addBotMessage({
+        type: 'text',
+        text: 'Please choose a payment method:',
+        buttons: [
+          { text: 'Add new payment method', action: 'add_new_payment_method', primary: true }
+        ]
+      });
+    } else {
+      this.currentStep = 'payment_amount';
+      this.addBotMessage({
+        type: 'text',
+        text: 'Please enter the amount you would like to pay:'
+      });
+    }
+  }
+
+  private handleAddNewPaymentMethod(): void {
+    this.addBotMessage({
+      type: 'text',
+      text: '✅ Got it. Please add your payment details to complete the payment.',
+      buttons: [
+        { text: 'Continue', action: 'continue_chat', primary: true }
+      ]
+    });
+  }
+
   // Add method to show signed in status
   showSignedInStatus(): void {
     const statusMessage: ChatMessage = {
@@ -957,38 +1083,40 @@ private userName ="";
         }, 3000); // Increased to 3 seconds
       }
     } else if (this.pendingAction === 'view_bill' || this.lastUserQuestion.toLowerCase().includes('view bill')) {
-      this.addBotMessage({
-        type: 'text',
-        text: 'Let me pull up your bill summary...'
-      });
-      
-      setTimeout(() => {
-        this.showBillSummary();
-        this.clearPendingState();
-      }, 2500); // Increased to 2.5 seconds
+      if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
+        // For business users, ask which account
+        this.askForAccountSelection('view_bill');
+      } else {
+        // For consumer users, show bill summary directly
+        this.addBotMessage({
+          type: 'text',
+          text: 'Let me pull up your bill summary...'
+        });
+
+        setTimeout(() => {
+          this.showBillSummary();
+          this.clearPendingState();
+        }, 2500);
+      }
     } else if (this.pendingAction === 'download_bill' || this.lastUserQuestion.toLowerCase().includes('download')) {
       setTimeout(() => {
         this.handleDownloadPdf();
         this.clearPendingState();
       }, 1500); // Increased to 1.5 seconds
     } else if (this.pendingAction === 'pay_bill' || this.lastUserQuestion.toLowerCase().includes('pay')) {
-      setTimeout(() => {
-        if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
-          this.addBotMessage({
-            type: 'text',
-            text: "Please click her to pay bill.",
-            buttons: [
-              { text: "Payment Page", action: "navigate_to_bills", primary: true }
-            ]
-          });
-        } else {
+      if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
+        // For business users, ask which account to pay
+        this.askForAccountSelection('pay_bill');
+      } else {
+        // For consumer users
+        setTimeout(() => {
           this.addBotMessage({
             type: 'text',
             text: "Please enter the amount you want to pay:"
           });
-        }
-        this.clearPendingState();
-      }, 1500); // Increased to 1.5 seconds
+          this.clearPendingState();
+        }, 1500);
+      }
     } else {
       // Default response with delay
       setTimeout(() => {
