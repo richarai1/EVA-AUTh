@@ -13,9 +13,9 @@ import { CommonModule } from '@angular/common';
     <div class="sign-in-container">
       <div class="sign-in-card">
         <div class="logo">
-          <img src="assets/att-header-logo.svg" alt="AT&T Business" />
+          <img [src]="logoSrc" alt="AT&T Business" height="100px" width="120px" />
         </div>
-        <h1 class="title">Sign in</h1>
+        <h1 class="title">Welcome</h1>
       
        
         <form (ngSubmit)="handleSubmit()" class="login-form">
@@ -201,6 +201,7 @@ export class LoginComponent implements OnInit {
   rememberMe: boolean = false;
   showPasswordField: boolean = false;
   passwordVisible: boolean = false;
+  logoSrc: string = 'assets/myatt.svg';
 
   constructor(
     private router: Router,
@@ -221,8 +222,18 @@ export class LoginComponent implements OnInit {
     }
     this.authService.setUserFlowContext(userContext);
 
+    // Set logo based on user flow context (assuming 'home page' corresponds to small-business/enterprise)
+    this.logoSrc = (userContext === 'small-business' || userContext === 'enterprise') ? 'assets/att-header-logo.svg' : 'assets/myatt.svg';
+
     this.authService.logout();
     localStorage.clear();
+
+    // Get AT&T ID from session if available (from chat)
+    const attId = sessionStorage.getItem('attId');
+    if (attId) {
+      this.inputValue = attId;
+      this.showPasswordField = false; // Prefill username field
+    }
   }
 
   handleSubmit() {
@@ -247,6 +258,8 @@ export class LoginComponent implements OnInit {
         this.authService.login(this.inputValue, this.inputValue).subscribe({
           next: (success) => {
             if (success) {
+              // Clear the AT&T ID from session after successful login
+              sessionStorage.removeItem('attId');
               this.router.navigate([redirectPath]);
             } else {
               alert('Invalid credentials');
