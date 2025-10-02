@@ -68,7 +68,7 @@ export class SmallBusinessComponent implements OnInit {
 
   navigateToLogin(): void {
     this.authService.setRedirectPath('/small-business');
-    this.chatService.openChatForAction('login');
+    this.router.navigate(['/login']);
   }
 
   openChat(): void {

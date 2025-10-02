@@ -248,7 +248,7 @@ export class EnterpriseComponent implements OnInit {
 
   navigateToLogin(): void {
     this.authService.setRedirectPath('/enterprise');
-    this.chatService.openChatForAction('login');
+    this.router.navigate(['/login']);
   }
 
   openChat(): void {
