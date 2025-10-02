@@ -207,15 +207,7 @@ private userName ="";
       });
       this.currentStep = null;
       setTimeout(() => {
-        if (this.lastUserMessage) {
-          const currentMessages = this.messagesSubject.value;
-          this.messagesSubject.next([...currentMessages, this.lastUserMessage!]);
-          setTimeout(() => {
-            this.executeUserRequest();
-          }, 1500);
-        } else {
-          this.executeUserRequest();
-        }
+        this.executeUserRequest();
       }, 500);
       return;
     }
@@ -980,6 +972,7 @@ private userName ="";
     this.selectedAccount = accountNumber;
     this.selectedAccountName = accountName;
     this.selectedAccountBalance = balance;
+    this.currentStep = null;
 
     this.addBotMessage({
       type: 'text',
@@ -989,6 +982,7 @@ private userName ="";
         { text: 'Pay Bill', action: 'pay_bill_prompt', primary: true }
       ]
     });
+    this.clearPendingState();
   }
 
   private handleAccountSelectionForPayment(accountNumber: string, accountName: string, amount: string): void {
@@ -1005,6 +999,7 @@ private userName ="";
         { text: 'Enter Other Amount', action: 'enter_other_amount', primary: true }
       ]
     });
+    this.clearPendingState();
   }
 
   private handlePaymentAmountSelection(type: 'full' | 'other'): void {
@@ -1056,7 +1051,7 @@ private userName ="";
 
   // Execute the user's original request after sign-in
   private executeUserRequest(): void {
-    if (this.pendingAction === 'bill_analysis' || this.lastUserQuestion.toLowerCase().includes('bill') && this.lastUserQuestion.toLowerCase().includes('high')) {
+    if (this.pendingAction === 'bill_analysis' || (this.lastUserQuestion && this.lastUserQuestion.toLowerCase().includes('bill') && this.lastUserQuestion.toLowerCase().includes('high'))) {
       // For consumer flow, ask about service type
       if (this.userFlowContext === 'consumer') {
         setTimeout(() => {
@@ -1080,12 +1075,14 @@ private userName ="";
         setTimeout(() => {
           this.showBillAnalysis();
           this.clearPendingState();
-        }, 3000); // Increased to 3 seconds
+        }, 3000);
       }
-    } else if (this.pendingAction === 'view_bill' || this.lastUserQuestion.toLowerCase().includes('view bill')) {
+    } else if (this.pendingAction === 'view_bill' || (this.lastUserQuestion && this.lastUserQuestion.toLowerCase().includes('view bill'))) {
       if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
         // For business users, ask which account
-        this.askForAccountSelection('view_bill');
+        setTimeout(() => {
+          this.askForAccountSelection('view_bill');
+        }, 500);
       } else {
         // For consumer users, show bill summary directly
         this.addBotMessage({
@@ -1098,15 +1095,17 @@ private userName ="";
           this.clearPendingState();
         }, 2500);
       }
-    } else if (this.pendingAction === 'download_bill' || this.lastUserQuestion.toLowerCase().includes('download')) {
+    } else if (this.pendingAction === 'download_bill' || (this.lastUserQuestion && this.lastUserQuestion.toLowerCase().includes('download'))) {
       setTimeout(() => {
         this.handleDownloadPdf();
         this.clearPendingState();
-      }, 1500); // Increased to 1.5 seconds
-    } else if (this.pendingAction === 'pay_bill' || this.lastUserQuestion.toLowerCase().includes('pay')) {
+      }, 1500);
+    } else if (this.pendingAction === 'pay_bill' || (this.lastUserQuestion && this.lastUserQuestion.toLowerCase().includes('pay'))) {
       if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
         // For business users, ask which account to pay
-        this.askForAccountSelection('pay_bill');
+        setTimeout(() => {
+          this.askForAccountSelection('pay_bill');
+        }, 500);
       } else {
         // For consumer users
         setTimeout(() => {
@@ -1131,7 +1130,7 @@ private userName ="";
           ]
         });
         this.clearPendingState();
-      }, 1500); // Increased to 1.5 seconds
+      }, 1500);
     }
   }
 
