@@ -1694,13 +1694,10 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
         this.userName=user.userName;
         // Only trigger sign-in flow if we're not already handling it via home component
         if (user.isAuthenticated && this.isOpen && wasNotAuthenticated && !sessionStorage.getItem('reopenChatAfterLogin')) {
-          // Add the signed in status message to chat
-          this.chatService.showSignedInStatus();
-          
-          // Then reinitialize chat after a delay
+          // Reinitialize chat after a delay
           setTimeout(() => {
             this.chatService.reinitializeAfterLogin();
-          }, 1500); // Increased delay
+          }, 800);
         }
       })
     );

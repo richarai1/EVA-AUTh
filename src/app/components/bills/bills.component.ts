@@ -47,12 +47,9 @@ export class BillsComponent implements OnInit {
       setTimeout(() => {
         this.chatService.openChat();
 
+        // Reinitialize after login with delay
         setTimeout(() => {
-          this.chatService.showSignedInStatus();
-
-          setTimeout(() => {
-            this.chatService.reinitializeAfterLogin();
-          }, 800);
+          this.chatService.reinitializeAfterLogin();
         }, 800);
       }, 1200);
     }

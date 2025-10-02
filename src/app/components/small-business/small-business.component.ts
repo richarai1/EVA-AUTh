@@ -52,17 +52,12 @@ export class SmallBusinessComponent implements OnInit {
 
       setTimeout(() => {
         this.chatService.openChat();
-        
-        // Show signed in status after a short delay
+
+        // Reinitialize after login with delay
         setTimeout(() => {
-          this.chatService.showSignedInStatus();
-          
-          // Then reinitialize after login
-          setTimeout(() => {
-            this.chatService.reinitializeAfterLogin();
-          }, 800); // Increased delay
-        }, 800); // Increased delay
-      }, 1200); // Increased initial delay
+          this.chatService.reinitializeAfterLogin();
+        }, 800);
+      }, 1200);
     }
   }
 
