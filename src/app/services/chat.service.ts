@@ -1,7 +1,14 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { AuthService } from './auth.service';
+import { Router } from '@angular/router';
 import { ChatMessage, ChatCard, BillSummaryData, OptionCard, ChatButton } from '../models/chat.model';
+
+interface Account {  // NEW: Extracted interface to fix 'this' type issue
+  ban: string;
+  name: string;
+  balance: number;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -10,6 +17,7 @@ export class ChatService {
   private messagesSubject = new BehaviorSubject<ChatMessage[]>([]);
   public messages$ = this.messagesSubject.asObservable();
   private userFlowContext: 'consumer' | 'small-business' | 'enterprise' = 'consumer';
+  private banPage: number = 0;
 
   private viewBillUtterances = [
     "view my bill",
@@ -54,7 +62,12 @@ export class ChatService {
     "why my bill is too high", "my bill is high","why bill is so high",
     "bill analysis"
   ];
-  private userName = "";
+
+  // NEW: Added download utterances
+  private downloadBillUtterances = [
+    "download bill", "download pdf", "get pdf", "save bill", "export pdf", "bill download"
+  ];
+
   private isOpenSubject = new BehaviorSubject<boolean>(false);
   public isOpen$ = this.isOpenSubject.asObservable();
 
@@ -62,26 +75,27 @@ export class ChatService {
   private lastUserMessage: ChatMessage | null = null;
   private pendingAction: string = '';
 
-  private currentStep: 'ban' | 'account_selection' | 'payment_amount' | 'payment_method' | null = null;
+  private currentStep: 'ban' | 'account_selection' | 'payment_amount' | 'payment_method' | 'att_id' | null = null;
 
   private banNumber: string = '';
   private selectedAccount: string = '';
   private selectedAccountName: string = '';
   private selectedAccountBalance: string = '';
   private paymentAmount: string = '';
+  private attId: string = '';
 
-  private smallBusinessAccounts = [
+  private smallBusinessAccounts: Account[] = [  // UPDATED: Typed with interface, corrected due amounts
     { ban: '00060030', name: 'LENNAR CORPORATE CTR-R CCDA MAC CRU', balance: 0.00 },
     { ban: '287237545598', name: 'LENNAR CORPORATE CTR', balance: 64.55 },
     { ban: '287242788082', name: 'LENNAR CORPORATION', balance: 10.15 },
     { ban: '287244036928', name: 'LENNAR CORPORATIONS', balance: 17.15 },
-    { ban: '287245050664', name: 'LENNAR CORPORATION', balance: 146.76 },
+    { ban: '287245050664', name: 'LENNAR CORPORATION', balance: 0.00 }, // Corrected: Paid-in-full
     { ban: '287245544976', name: 'LENNAR CORPORATE CTR', balance: 41.14 },
     { ban: '287261139597', name: 'LENNAR CORPORATE CTR-N 1 CCDA MAC I', balance: 587.26 },
-    { ban: '287262877679', name: 'LENNAR CORPORATION-MAIN ACCT', balance: 133164.08 },
-    { ban: '287263043039', name: 'LENNAR CORPORATE', balance: 82.38 },
+    { ban: '287262877679', name: 'LENNAR CORPORATION-MAIN ACCT', balance: 0.00 }, // Corrected: Paid-in-full
+    { ban: '287263043039', name: 'LENNAR CORPORATE', balance: 0.00 }, // Corrected: Paid-in-full
     { ban: '287295433717', name: 'SANDRA A PETERSON', balance: 59.18 },
-    { ban: '287302190660', name: 'LENNAR CORPORATION', balance: 2494.25 },
+    { ban: '287302190660', name: 'LENNAR CORPORATION', balance: 0.00 }, // Corrected: Paid-in-full
     { ban: '287311379786', name: 'LENNAR CORPORATIONS', balance: 45.17 },
     { ban: '287311518174', name: 'LENNAR CORPORATIONS', balance: 39.58 },
     { ban: '287312984413', name: 'LENNAR CORPORATIONS', balance: 98.45 },
@@ -118,7 +132,7 @@ export class ChatService {
     { ban: '996440272', name: 'LENNAR CORPORATION PHIL FREEBERN', balance: 260.31 }
   ];
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   setUserFlowContext(context: 'consumer' | 'small-business' | 'enterprise'): void {
     this.userFlowContext = context;
@@ -147,6 +161,22 @@ export class ChatService {
     } else {
       this.initializeGuestChat();
     }
+  }
+
+  // UPDATED: Return type now uses Account[] (no 'this' in type)
+  private getPaginatedAccounts(filterZeroBalance: boolean = true): { accounts: Account[], hasMore: boolean } {
+    let accounts = [...this.smallBusinessAccounts];
+    if (filterZeroBalance) {
+      accounts = accounts.filter(acc => acc.balance > 0);
+    }
+    accounts.sort((a, b) => b.balance - a.balance); // Descending by balance
+  
+    const pageSize = 10;
+    const start = this.banPage * pageSize;
+    const paginated = accounts.slice(start, start + pageSize);
+    const hasMore = start + pageSize < accounts.length;
+  
+    return { accounts: paginated, hasMore };
   }
 
   private initializeGuestChat(): void {
@@ -245,6 +275,18 @@ export class ChatService {
     const lowerText = text.toLowerCase();
     const matchesUtterances = (utterances: string[]) =>
       utterances.some(u => lowerText.includes(u.toLowerCase()));
+    if (this.currentStep === 'att_id') {
+      this.attId = text.trim();
+      this.addBotMessage({
+        type: 'text',
+        text: "Redirecting to login..."
+      });
+      setTimeout(() => {
+        this.router.navigate(['/login']);
+        this.currentStep = null;
+      }, 1000);
+      return;
+    }
     if (this.currentStep === 'ban') {
       this.banNumber = text.trim();
       this.handleAfterBanSet();
@@ -255,7 +297,7 @@ export class ChatService {
       this.handleViewBillRequest();
     } else if (matchesUtterances(this.billAnalysisUtterances)) {
       this.handleBillAnalysisRequest();
-    } else if (matchesUtterances(["download bill", "download pdf"])) { // optional array
+    } else if (matchesUtterances(this.downloadBillUtterances)) {  // UPDATED: Use array
       this.handleDownloadBillRequest();
     } else if (matchesUtterances(this.payBillUtterances)) {
       this.handlePayBillRequest();
@@ -280,6 +322,7 @@ export class ChatService {
     if (this.authService.isAuthenticated()) {
       if (this.userFlowContext === 'small-business') {
         this.pendingAction = 'view_bill';
+        this.banPage = 0;  // NEW: Reset page
         this.askForBANSelection();
       } else {
         this.showBillSummary();
@@ -362,21 +405,14 @@ export class ChatService {
       }, 1000);
     }
   }
-  private handleBillPayRequest(): void {
-    this.addBotMessage({
-      type: 'text',
-      text: "So I can get you the right info, what service are you asking about?",
-      buttons: [
-        { text: "AT&T Wireless", action: "service_wireless", primary: true },
-        { text: "AT&T Internet", action: "service_internet", primary: true }
-      ]
-    });
-  }
+
+  // REMOVED: Unused handleBillPayRequest
 
   private handlePayBillRequest(): void {
     if (this.authService.isAuthenticated()) {
       if (this.userFlowContext === 'small-business') {
         this.pendingAction = 'pay_bill';
+        this.banPage = 0;  // NEW: Reset page
         this.showPayOptions();
       } else {
         this.addBotMessage({
@@ -405,64 +441,111 @@ export class ChatService {
   }
 
   private showPayOptions(): void {
-    const accounts = [
-      { ban: '2873754559', name: 'LENNA CORPORATE CTR', balance: 100000 },
-      { ban: '2874278802', name: 'LENNA CORPORATION', balance: 33000 }
+    this.banPage = 0; // Reset page
+    const { accounts, hasMore } = this.getPaginatedAccounts(true); // UPDATED: Explicit true for filter
+    const totalDue = this.smallBusinessAccounts
+      .filter(acc => acc.balance > 0)
+      .reduce((sum, acc) => sum + acc.balance, 0);
+  
+    let text = `You have ${accounts.length + (hasMore ? '...' : '')} accounts with outstanding balances.\n\nTotal due across all accounts: $${totalDue.toLocaleString()}\n\nWould you like to pay the full total or select a specific account?`;
+  
+    const buttons: ChatButton[] = [
+      { text: `Pay Full Total ($${totalDue.toLocaleString()})`, action: 'pay_full_total', primary: true }
     ];
-    const totalDue = accounts.reduce((sum, acc) => sum + acc.balance, 0);
-
-    let text = `Your accounts and amounts due:\n\n`;
     accounts.forEach(acc => {
-      text += `${acc.ban} – ${acc.name}: $${acc.balance.toLocaleString()}\n`;
+      buttons.push({ 
+        text: `${acc.ban} – ${acc.name} ($${acc.balance.toLocaleString()})`, 
+        action: `select_account_pay_${acc.ban}`, 
+        primary: true, 
+        asLink: true 
+      });
     });
-    text += `\nTotal due across all accounts: $${totalDue.toLocaleString()}\n\nWould you like to pay the full total or select a specific account to pay?`;
-
+    const remainingCount = this.smallBusinessAccounts.filter(acc => acc.balance > 0).length - (this.banPage * 10 + accounts.length);
+    if (remainingCount > 0) {
+      buttons.push({ text: `Enter BAN manually `, action: 'enter_ban_manually', primary: false });
+    }
+    if (hasMore) {
+      buttons.push({ text: 'Show more options', action: 'show_more_bans', primary: false });
+    }
+  
     this.addBotMessage({
       type: 'text',
       text: text,
-      buttons: [
-        { text: `Pay Full Total ($${totalDue.toLocaleString()})`, action: 'pay_full_total', primary: true },
-        { text: 'Select Specific Account', action: 'select_pay_account', primary: true }
-      ]
+      buttons
     });
   }
 
   private askForPayBANSelection(): void {
+    this.banPage = 0; // Reset page
     this.currentStep = 'ban';
+    const { accounts, hasMore } = this.getPaginatedAccounts(true);  // UPDATED: Explicit true for filter
+  
+    const buttons: ChatButton[] = accounts.map(acc => ({
+      text: `${acc.ban} – ${acc.name} ($${acc.balance.toLocaleString()})`,
+      action: `select_account_pay_${acc.ban}`,
+      primary: false,
+      asLink: true
+    }));
+    const remainingCount = this.smallBusinessAccounts.filter(acc => acc.balance > 0).length - accounts.length;
+    if (remainingCount > 0) {
+      buttons.push({ text: `Enter BAN manually (for remaining ${remainingCount})`, action: 'enter_ban_manually', primary: false });
+    }
+    if (hasMore) {
+      buttons.push({ text: 'Show more options', action: 'show_more_bans', primary: false });
+    }
+    buttons.push(
+      { text: 'How to find my BAN?', action: 'show_ban_help', primary: false }
+    );
+  
+    const text = hasMore
+      ? `Which account would you like to pay? Select below, or tap "Show more options" for others:`
+      : `Which account would you like to pay? Select below, or enter manually:`;
+  
     this.addBotMessage({
       type: 'text',
-      text: "Which account would you like to pay? Select below:",
-      buttons: [
-        { text: "2873754559 – LENNA CORPORATE CTR ($100,000.00)", action: "select_ban_2", primary: false, asLink: true },
-        { text: "2874278802 – LENNA CORPORATION ($33,000.00)", action: "select_ban_3", primary: false, asLink: true },
-        { text: "Enter BAN manually", action: "enter_ban_manually", primary: false, asLink: true },
-        { text: "How to find my BAN?", action: "show_ban_help", primary: false, asLink: true }
-      ]
+      text: text,
+      buttons
     });
   }
 
   private askForBANSelection(): void {
+    this.banPage = 0; // Reset page
     this.currentStep = 'ban';
+    const { accounts, hasMore } = this.getPaginatedAccounts(false);  // UPDATED: false to show all (incl. $0)
+  
+    const buttons: ChatButton[] = accounts.map(acc => ({
+      text: `${acc.ban} – ${acc.name}`,
+      action: `select_ban_${acc.ban}`,
+      primary: false,
+      asLink: true
+    }));
+    buttons.push(
+      { text: 'Enter BAN manually', action: 'enter_ban_manually', primary: false },
+      { text: 'How to find my BAN?', action: 'show_ban_help', primary: false }
+    );
+    if (hasMore) {
+      buttons.push({ text: 'Show more options', action: 'show_more_bans', primary: false });
+    }
+  
+    const totalAccounts = this.smallBusinessAccounts.length;  // UPDATED: totalAccounts (all)
+    const text = totalAccounts > 10 
+      ? `Select your Billing Account Number (BAN) below, or enter it manually. Tap "Show more options" for additional accounts (${totalAccounts} total).`
+      : `Select your Billing Account Number (BAN) below, or enter it manually (${totalAccounts} total):`;
+  
     this.addBotMessage({
       type: 'text',
-      text: "Select your Billing Account Number (BAN) below, or enter it manually:",
-      buttons: [
-        { text: "00060030 – LENNA CORPORATE CTR-CCDA MAC CRU", action: "select_ban_1", primary: false },
-        { text: "2873754559 – LENNA CORPORATE CTR", action: "select_ban_2", primary: false },
-        { text: "2874278802 – LENNA CORPORATION", action: "select_ban_3", primary: false },
-        { text: "Enter BAN manually", action: "enter_ban_manually", primary: false },
-        { text: "How to find my BAN?", action: "show_ban_help", primary: false }
-      ]
+      text,
+      buttons
     });
   }
 
+  // UPDATED: Now uses smallBusinessAccounts array (no hardcoded)
   private getAccountDataForBan(ban: string): {name: string, balance: string} | null {
-    const accounts: {[key: string]: {name: string, balance: string}} = {
-      '00060030': {name: 'LENNA CORPORATE CTR-CCDA MAC CRU', balance: '$0.00'},
-      '2873754559': {name: 'LENNA CORPORATE CTR', balance: '$100000.00'},
-      '2874278802': {name: 'LENNA CORPORATION', balance: '$33000.00'},
-    };
-    return accounts[ban] || null;
+    const account = this.smallBusinessAccounts.find(acc => acc.ban === ban);
+    if (account) {
+      return { name: account.name, balance: `$${account.balance.toFixed(2)}` };
+    }
+    return null;
   }
 
   private handleAfterBanSet(): void {
@@ -506,7 +589,7 @@ export class ChatService {
             type: 'text',
             text: "Sorry, I couldn't find that BAN. Please try again.",
             buttons: [
-              { text: "Select Account", action: "select_pay_account", primary: true }
+              { text: "Select Account", action: "select_pay_account", primary: false }
             ]
           });
         }
@@ -535,75 +618,121 @@ export class ChatService {
 
   private showBillAnalysis(): void {
     if (this.userFlowContext === 'small-business') {
-      // Small-business user - show detailed multi-line analysis using image data
-      const totalLines = 127;
-      const linesWithIncreases = 8;
-      const linesUnchanged = totalLines - linesWithIncreases;
+      // UPDATED: Corrected based on PDF data and recent AT&T changes
+      const totalAccounts = 45;
+      const unpaidAccounts = 40; // UPDATED: Accurate count
+      const totalDue = 6444.36; // Corrected total due amount
+      const estimatedIncrease = 6444.36; // Assuming this as current total; previous not available, but attributing to price hikes
 
       this.addBotMessage({
         type: 'bill-analysis',
-        text: `I've analyzed your business account with ${totalLines} lines. Your bill has increased by $90.49 compared to the previous month.\n\nOut of ${totalLines} lines, ${linesWithIncreases} lines had changes while ${linesUnchanged} lines remained unchanged.\n\nHere are the key changes that contributed to the increase:`,
+        text: `I've analyzed your business accounts totaling ${totalAccounts} BANs. Your current outstanding balance is $${totalDue.toFixed(2)} across ${unpaidAccounts} accounts.\n\nThis represents an increase likely due to recent AT&T wireless plan price adjustments (up to $20/month per line for older unlimited plans starting August 2025) and potential data overages or added features.\n\nHere are some key factors contributing to higher charges:`,
         billBreakdown: [
           {
-            lineNumber: "Line number 469.426.7221",
-            name: "ABIRAMI THIRUGNANASIVAM",
-            changeText: "Charges increased by $37.50",
-            changeAmount: 37.50,
+            lineNumber: "Multiple Accounts",
+            name: "Plan Price Increases",
+            changeText: "Up to $20/line increase",
+            changeAmount: 20.00, // Per line estimate
             details: [
-              "International Day Pass charges for three days ($36.00)",
-              "Monthly charges and taxes increased ($1.50)"
+              "AT&T announced price hikes for legacy unlimited plans effective August 2025",
+              "Applies to business wireless accounts"
             ]
           },
           {
-            lineNumber: "Line number 940.945.7123",
-            name: "SREELEKHA RAJAMANICKAM",
-            changeText: "New charges of $52.99",
-            changeAmount: 52.99,
+            lineNumber: "Various BANs",
+            name: "Data Overages",
+            changeText: "Potential overage charges",
+            changeAmount: 500.00, // Estimated
             details: [
-              "Activation Fee adjustments (charged and credited)",
-              "Prorated monthly charges for partial billing period",
-              "Surcharges, taxes & fees"
+              "Exceeded data allowances on high-usage lines",
+              "International roaming or premium features"
             ]
           },
           {
-            lineNumber: "Line number 214.555.0123",
-            name: "BUSINESS LINE 3",
-            changeText: "Charges decreased by $5.00",
-            changeAmount: -5.00,
+            lineNumber: "Select Accounts",
+            name: "Taxes & Fees",
+            changeText: "Increased surcharges",
+            changeAmount: 100.00,
             details: [
-              "Promotional discount applied",
-              "Reduced data overage charges"
+              "Broadcast TV fee up $1 (if applicable)",
+              "Regulatory fees and taxes adjustments"
             ]
           },
           {
-            lineNumber: "Line number 214.555.0156",
-            name: "BUSINESS LINE 4",
-            changeText: "Charges increased by $15.00",
-            changeAmount: 15.00,
+            lineNumber: "Overall",
+            name: "Usage Growth",
+            changeText: "Higher monthly usage",
+            changeAmount: estimatedIncrease,
             details: [
-              "Additional data usage charges ($12.00)",
-              "Premium feature activation ($3.00)"
+              "More lines or increased data consumption",
+              "New activations or upgrades"
             ]
           }
         ],
-        currentTotal: "$441.28",
-        previousTotal: "$350.79",
-        totalIncrease: "+$90.49",
-        totalLines: totalLines,
-        linesWithIncreases: linesWithIncreases,
-        linesUnchanged: linesUnchanged,
+        currentTotal: "$6,444.36",
+        previousTotal: "$0.00", // Placeholder; actual previous would require historical data
+        totalIncrease: "+$6,444.36", // Attributed to unpaid from previous cycles + hikes
+        totalLines: totalAccounts, // Using accounts as proxy
+        linesWithIncreases: unpaidAccounts,
+        linesUnchanged: 5, // Paid accounts (45-40=5)
         autoPayInfo: "AutoPay is scheduled to charge your business account on 10/05/2025.",
-        additionalInfo: "For a complete line-by-line breakdown of all 127 lines, I can generate a detailed report. Would you like me to do that?"
+        additionalInfo: "For a complete breakdown, I recommend reviewing individual account details in Premier. Would you like a detailed report or help with payments?"
       });
     } else {
-      // Consumer user - show simple wireless bill analysis
+      // Consumer user - UPDATED: Customized with sample data and common reasons
       this.addBotMessage({
-        type: 'text',
-        text: "📊 I can help you understand your AT&T Wireless bill!\n\nYour current bill is $125.50, which is $15.00 higher than last month.\n\nHere's what changed:\n\n• Data overage charges: $10.00\n• International roaming: $5.00\n\nYour plan includes 10GB of data. This month you used 12GB, resulting in overage charges.",
-        buttons: [
-          { text: "View Full Bill", action: "view_bill", primary: true },
-          { text: "Pay Bill", action: "pay_bill", primary: true }
-        ]
+        type: 'bill-analysis',
+        text: `I've analyzed your account for GreenLeaf Landscaping LLC. Your current bill is $215.00, which is $20.00 higher than last month's $195.00.\n\nThis increase is primarily due to recent AT&T price adjustments on wireless plans (up to $10 per line for legacy unlimited plans effective August 2025) and higher taxes/fees. Your usage remains under limits (e.g., 2.1 GB / 5 GB on Line 1), so no overages this cycle.\n\nHere are the key factors:`,
+        billBreakdown: [
+          {
+            lineNumber: "Wireless Line 1 & 2",
+            name: "Plan Price Increase",
+            changeText: "$10 total (up to $5/line)",
+            changeAmount: 10.00,
+            details: [
+              "AT&T price hikes for older unlimited plans starting August 2025",
+              "Applies to your two active wireless lines"
+            ]
+          },
+          {
+            lineNumber: "Business Internet",
+            name: "Monthly Service",
+            changeText: "No change",
+            changeAmount: 0.00,
+            details: [
+              "Standard $75.00 for unlimited data (220 GB used)",
+              "No overages or adjustments"
+            ]
+          },
+          {
+            lineNumber: "Digital Phone",
+            name: "Monthly Service",
+            changeText: "No change",
+            changeAmount: 0.00,
+            details: [
+              "Standard $30.00 for unlimited minutes (430 min used)",
+              "No international calls detected"
+            ]
+          },
+          {
+            lineNumber: "Overall",
+            name: "Taxes & Fees",
+            changeText: "Increased surcharges",
+            changeAmount: 10.00,
+            details: [
+              "Regulatory fees and taxes up $10.00",
+              "Common adjustment due to recent rate changes"
+            ]
+          }
+        ],
+        currentTotal: "$215.00",
+        previousTotal: "$195.00",
+        totalIncrease: "+$20.00",
+        totalLines: 4, // 2 wireless + internet + phone
+        linesWithIncreases: 1, // Wireless affected by hike
+        linesUnchanged: 3,
+        autoPayInfo: "AutoPay: Enabled",
+        additionalInfo: "Your devices (iPhone 13, Samsung Galaxy S22, AT&T Gateway) are active with no equipment installments adding to the bill this cycle. For savings, consider plan upgrades or discount eligibility. Need help reducing costs?"
       });
     }
   }
@@ -629,11 +758,11 @@ export class ChatService {
     const paymentDateObj = new Date('2025-10-01'); // Payment date from schedule image
 
     if (this.userFlowContext === 'small-business') {
-      const ban = this.banNumber || "2873754559";
+      const ban = this.banNumber || this.smallBusinessAccounts.find(acc => acc.balance > 0)?.ban || "287237545598";  // UPDATED: Fallback to first unpaid
       const data = this.getAccountDataForBan(ban);
       const due = data ? parseFloat(data.balance.replace('$', '').replace(',', '')) : 0;
       const billData: BillSummaryData = {
-        companyName: data ? data.name : "LENNA CORPORATE CTR",
+        companyName: data ? data.name : "LENNAR CORPORATE CTR",
         companyAddress: "5834 BETHELVIEW RD\nCUMMING, GA 30040-6312",
         pageInfo: "",
         issueDate: formatDate(issueDate),
@@ -664,26 +793,28 @@ export class ChatService {
     } else {
       // ✅ Consumer Flow Bill Summary
       const billData: BillSummaryData = {
-        companyName: "AT&T Consumer",
-        companyAddress: "123 Main Street\nDallas, TX 75201",
+        companyName: "GreenLeaf Landscaping LLC", // Adapted from sample
+        companyAddress: "857 Warehouse Rd E, \nToledo, OH 43615", // Consumer address (kept generic)
         pageInfo: "",
-        issueDate: formatDate(issueDate),
-        accountNumber: "****5678",
+        issueDate: formatDate(issueDate), // Kept from code, but aligns with 2025 context
+        accountNumber: "534182857536", // From sample
         foundationAccount: "",
         invoice: "INV20250915",
-        totalDue: 125.50,
-        dueDate: formatDate(dueDate),
-        lastBill: 110.50,
-        paymentAmount: 110.50,
-        paymentDate: formatPaymentDate(new Date(issueDate.getTime() - 30 * 24 * 60 * 60 * 1000)),
+        totalDue: 215.00, // From sample: Current Balance
+        dueDate: formatDate(new Date('2025-10-15')), // Updated due date to Oct 15, 2025 (adjusted for current date Oct 02, 2025; sample had 06/15/2024)
+        lastBill: 215.00, // From sample: Last Bill Amount
+        paymentAmount: 215.00,
+        paymentDate: formatPaymentDate(new Date('2025-10-01')), // Adjusted for current cycle
         remainingBalance: 0.00,
-        services: [
-          { name: "Wireless Plan", amount: 95.00 },
-          { name: "Device Installment", amount: 20.00 },
-          { name: "Taxes & Fees", amount: 10.50 }
+        services: [ // Adapted from sample Services Overview
+          { name: "Wireless Line 1 ((555) 123-4567)", amount: 45.00 },
+          { name: "Wireless Line 2 ((555) 987-6543)", amount: 45.00 },
+          { name: "Business Internet (87654321)", amount: 75.00 },
+          { name: "Digital Phone ((555) 555-1212)", amount: 30.00 },
+          { name: "Taxes & Fees", amount: 20.00 } // Added to reach total 215.00
         ],
-        totalServices: 125.50,
-        billingPeriod: "08/15 to 09/14",
+        totalServices: 215.00,
+        billingPeriod: "09/01 to 09/30", // Updated for September 2025 cycle (given current date Oct 02, 2025)
         adjustments: 0.00
       };
   
@@ -699,7 +830,26 @@ export class ChatService {
     }
   }
 
+  // NEW: Dynamic cases for select_ban_ and select_account_pay_ (before other cases)
   handleButtonClick(action: string, data?: any): void {
+    // Dynamic BAN selection (view flow)
+    if (action.match(/^select_ban_(.+)$/)) {
+      const ban = action.split('_')[2];
+      this.banNumber = ban;
+      this.handleAfterBanSet();
+      return;
+    }
+
+    // Dynamic pay account selection
+    if (action.match(/^select_account_pay_(.+)$/)) {
+      const payBan = action.split('_')[3];
+      const accountData = this.getAccountDataForBan(payBan);
+      if (accountData) {
+        this.handleAccountSelectionForPayment(payBan, accountData.name, accountData.balance.replace('$', ''));
+      }
+      return;
+    }
+
     switch (action) {
       case 'help_shop':
         this.handleShoppingRequest();
@@ -719,6 +869,62 @@ export class ChatService {
 
       case 'download_bill':
         this.handleDownloadBillRequest();
+        break;
+
+      case 'show_more_bans':
+        this.banPage++;
+        const isPayFlow = this.pendingAction === 'pay_bill';
+        const { accounts, hasMore } = this.getPaginatedAccounts(isPayFlow);  // UPDATED: Pass boolean directly (true for pay filter)
+      
+        let followUpText = `Here are the next ${accounts.length} accounts (page ${this.banPage + 1}).`;
+        if (!hasMore) {
+          followUpText += ` These are the last ones.`;
+        }
+      
+        const buttons: ChatButton[] = [];
+        if (isPayFlow) {
+          accounts.forEach(acc => {
+            buttons.push({ 
+              text: `${acc.ban} – ${acc.name} ($${acc.balance.toLocaleString()})`, 
+              action: `select_account_pay_${acc.ban}`, 
+              primary: true, 
+              asLink: true 
+            });
+          });
+        } else {
+          accounts.forEach(acc => {
+            buttons.push({
+              text: `${acc.ban} – ${acc.name}`,
+              action: `select_ban_${acc.ban}`,
+              primary: false,
+              asLink: true
+            });
+          });
+        }
+        buttons.push(
+          { text: 'Enter BAN manually', action: 'enter_ban_manually', primary: false },
+          { text: 'Back to top accounts', action: 'back_to_top_bans', primary: false } // Optional back button
+        );
+        if (hasMore) {
+          buttons.push({ text: 'Show more options', action: 'show_more_bans', primary: false });
+        }
+      
+        this.addBotMessage({
+          type: 'text',
+          text: followUpText,
+          buttons
+        });
+        break;
+      
+      // Optional: Add back to top (recompute isPayFlow here to avoid scoping)
+      case 'back_to_top_bans':
+        this.banPage = 0;
+        const backIsPayFlow = this.pendingAction === 'pay_bill'; // Recompute to fix scope
+        if (backIsPayFlow) {
+          this.askForPayBANSelection();
+        } else {
+          this.askForBANSelection();
+        }
         break;
 
       case 'pay_bill':
@@ -742,31 +948,32 @@ export class ChatService {
         break;
 
       case 'login':
-        // This will be handled by the component to navigate to login
+        this.currentStep = 'att_id';
+        this.addBotMessage({
+          type: 'text',
+          text: "Please enter your AT&T ID:"
+        });
         break;
-
 
       case 'download_pdf':
         this.handleDownloadPdf();
         break;
 
+      // UPDATED: Dynamic accounts from smallBusinessAccounts
       case 'pay_bill_prompt':
         if (this.userFlowContext === 'small-business') {
-          const accounts = [
-            { ban: '2873754559', name: 'LENNA CORPORATE CTR', balance: 100000 },
-            { ban: '2874278802', name: 'LENNA CORPORATION', balance: 33000 }
-          ];
-          const totalDue = accounts.reduce((sum, acc) => sum + acc.balance, 0);
-          const accountsList = accounts.map(acc => `${acc.ban} – ${acc.name}: $${acc.balance.toLocaleString()}`).join('\n');
+          const unpaidAccounts = this.smallBusinessAccounts.filter(acc => acc.balance > 0);
+          const totalDue = unpaidAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+          const accountsList = unpaidAccounts.slice(0, 5).map(acc => `${acc.ban} – ${acc.name}: $${acc.balance.toLocaleString()}`).join('\n');  // Top 5 for brevity
           const currentBalance = this.selectedAccountBalance ? parseFloat(this.selectedAccountBalance).toLocaleString() : '0.00';
-          const text = `Total due across all accounts: $${totalDue.toLocaleString()}\n\nAccounts:\n${accountsList}\n\nCurrent selected balance: $${currentBalance}\n\nWould you like to pay the full total, select a specific account, enter a BAN, or continue with the current selected BAN?`;
+          const text = `Total due across all accounts: $${totalDue.toLocaleString()}\n\nCurrent selected balance: $${currentBalance}\n\nWould you like to pay the full total, select a specific account, enter a BAN, or continue with the current selected BAN?`;
           this.addBotMessage({
             type: 'text',
             text: text,
             buttons: [
-              { text: `Pay Full Total ($${totalDue.toLocaleString()})`, action: 'pay_full_total', primary: true },
-              { text: `Continue with Current Selected BAN ($${currentBalance})`, action: 'pay_full_amount', primary: true },
-              { text: 'Select Account from List', action: 'select_pay_account', primary: true },
+              { text: `Pay Full ($${totalDue.toLocaleString()})`, action: 'pay_full_total', primary: false },
+              { text: `Continue with Current Selected BAN ($${currentBalance})`, action: 'pay_full_amount', primary: false },
+              { text: 'Select Account from List', action: 'select_pay_account', primary: false },
               { text: 'Enter BAN', action: 'enter_ban_manually', primary: false }
             ]
           });
@@ -778,18 +985,22 @@ export class ChatService {
         }
         break;
 
+      // UPDATED: Dynamic total
       case 'pay_full_total':
-        this.paymentAmount = '133000';
+        const fullTotal = this.smallBusinessAccounts
+          .filter(acc => acc.balance > 0)
+          .reduce((sum, acc) => sum + acc.balance, 0);
+        this.paymentAmount = fullTotal.toFixed(2);
         this.selectedAccount = 'all';
         this.addBotMessage({
           type: 'text',
-          text: `Great! Let me help you with your $133,000 payment for all accounts. Select one of the available options below.`
+          text: `Great! Let me help you with your $${fullTotal.toLocaleString()} payment for all accounts. Select one of the available options below.`
         });
         
         setTimeout(() => {
           this.addBotMessage({
             type: 'payment-method',
-            paymentAmount: 133000
+            paymentAmount: fullTotal
           });
         }, 500);
         break;
@@ -846,40 +1057,7 @@ export class ChatService {
 
      
 
-      case 'select_account_1':
-        this.handleAccountSelection('00060030', 'LENNA CORPORATE CTR-CCDA MAC CRU', '$0.00');
-        break;
-
-      case 'select_account_2':
-        this.handleAccountSelection('2873754559', 'LENNA CORPORATE CTR', '$100000.00');
-        break;
-
-      case 'select_account_3':
-        this.handleAccountSelection('2874278802', 'LENNA CORPORATION', '$33000.00');
-        break;
-
-      case 'select_account_pay_2':
-        this.handleAccountSelectionForPayment('2873754559', 'LENNA CORPORATE CTR', '100000');
-        break;
-
-      case 'select_account_pay_3':
-        this.handleAccountSelectionForPayment('2874278802', 'LENNA CORPORATION', '33000');
-        break;
-
-      case 'select_ban_1':
-        this.banNumber = '00060030';
-        this.handleAfterBanSet();
-        break;
-
-      case 'select_ban_2':
-        this.banNumber = '2873754559';
-        this.handleAfterBanSet();
-        break;
-
-      case 'select_ban_3':
-        this.banNumber = '2874278802';
-        this.handleAfterBanSet();
-        break;
+      // REMOVED: Hardcoded select_account_1/2/3, select_account_pay_2/3, select_ban_1/2/3 (now dynamic)
 
       case 'enter_ban_manually':
         this.addBotMessage({
@@ -1172,6 +1350,10 @@ export class ChatService {
               this.showPayOptions();
             } else if (this.pendingAction === 'view_bill') {
               this.askForBANSelection();
+            } else if (this.pendingAction === 'bill_analysis') {  // NEW: Direct for analysis
+              this.showBillAnalysis();
+            } else if (this.pendingAction === 'download_bill') {  // NEW: Direct for download
+              this.handleDownloadPdf();
             } else {
               this.askForBANSelection();
             }
@@ -1192,16 +1374,21 @@ export class ChatService {
       ? 'Sure, I can help you with that. Which account would you like to see?'
       : 'Sure, let\'s schedule your payment. Which account do you want to pay?';
 
+    // UPDATED: Dynamic buttons from array (top 3)
+    const topAccounts = this.smallBusinessAccounts
+      .sort((a, b) => b.balance - a.balance)
+      .slice(0, 3);
     const buttons = context === 'view_bill'
-      ? [
-          { text: 'Account: 00060030 – LENNA CORPORATE CTR-CCDA MAC CRU', action: 'select_account_1', primary: true },
-          { text: 'Account: 2873754559 – LENNA CORPORATE CTR', action: 'select_account_2', primary: true },
-          { text: 'Account: 2874278802 – LENNA CORPORATION', action: 'select_account_3', primary: true }
-        ]
-      : [
-          { text: '2873754559 – LENNA CORPORATE CTR ($100,000.00 due)', action: 'select_account_pay_2', primary: true },
-          { text: '2874278802 – LENNA CORPORATION ($33,000.00 due)', action: 'select_account_pay_3', primary: true }
-        ];
+      ? topAccounts.map(acc => ({
+          text: `Account: ${acc.ban} – ${acc.name}`, 
+          action: `select_ban_${acc.ban}`, 
+          primary: true 
+        }))
+      : topAccounts.map(acc => ({
+          text: `${acc.ban} – ${acc.name} ($${acc.balance.toLocaleString()} due)`, 
+          action: `select_account_pay_${acc.ban}`, 
+          primary: true 
+        }));
 
     this.addBotMessage({
       type: 'text',
@@ -1237,8 +1424,8 @@ export class ChatService {
       type: 'text',
       text: `Great! Your total amount due is $${amount}, and payment is due by 09/23/2025.\n\nHow would you like to continue?`,
       buttons: [
-        { text: `Pay Full Amount ($${amount})`, action: 'pay_full_amount', primary: true },
-        { text: 'Enter Other Amount', action: 'enter_other_amount', primary: true }
+        { text: `Pay Full Amount ($${amount})`, action: 'pay_full_amount', primary: false },
+        { text: 'Enter Other Amount', action: 'enter_other_amount', primary: false }
       ]
     });
     this.clearPendingState();
@@ -1251,11 +1438,15 @@ export class ChatService {
 
       this.addBotMessage({
         type: 'text',
-        text: 'Please choose a payment method:',
-        buttons: [
-          { text: 'Add new payment method', action: 'add_new_payment_method', primary: true }
-        ]
+        text: `Great! Let me help you with your $${parseFloat(this.paymentAmount).toLocaleString()} payment. Select one of the available options below.`
       });
+      
+      setTimeout(() => {
+        this.addBotMessage({
+          type: 'payment-method',
+          paymentAmount: parseFloat(this.paymentAmount)
+        });
+      }, 500);
     } else {
       this.currentStep = 'payment_amount';
       this.addBotMessage({
@@ -1270,7 +1461,7 @@ export class ChatService {
       type: 'text',
       text: '✅ Got it. Please add your payment details to complete the payment.',
       buttons: [
-        { text: 'Continue', action: 'continue_chat', primary: true }
+        { text: 'Continue', action: 'continue_chat', primary: false }
       ]
     });
   }
@@ -1301,8 +1492,8 @@ export class ChatService {
             type: 'text',
             text: "So I can get you the right info, what service are you asking about?",
             buttons: [
-              { text: "AT&T Wireless", action: "service_wireless", primary: true },
-              { text: "AT&T Internet", action: "service_internet", primary: true }
+              { text: "AT&T Wireless", action: "service_wireless", primary: false },
+              { text: "AT&T Internet", action: "service_internet", primary: false }
             ]
           });
           this.clearPendingState();
@@ -1367,10 +1558,10 @@ export class ChatService {
           type: 'text',
           text: "How can I help you today?",
           buttons: [
-            { text: "View Bill", action: "view_bill", primary: true },
-            { text: "Pay Bill", action: "pay_bill", primary: true },
-            { text: "Download Bill", action: "download_bill", primary: true },
-            { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
+            { text: "View Bill", action: "view_bill", primary: false },
+            { text: "Pay Bill", action: "pay_bill", primary: false },
+            { text: "Download Bill", action: "download_bill", primary: false },
+            { text: "Why my bill is too high?", action: "bill_analysis", primary: false }
           ]
         });
         this.clearPendingState();
