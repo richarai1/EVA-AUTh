@@ -299,6 +299,11 @@ export class ChatService {
         });
 
         setTimeout(() => {
+          sessionStorage.setItem('attId', this.attId);
+          const userContext = this.getUserFlowContext();
+          const redirectPath = userContext === 'small-business' ? '/small-business' : '/home';
+          this.authService.setRedirectPath(redirectPath);
+          sessionStorage.setItem('reopenChatAfterLogin', 'true');
           this.router.navigate(['/login']);
           this.currentStep = null;
         }, 2000);
@@ -970,7 +975,7 @@ export class ChatService {
         this.pendingAction = 'login';
         this.addBotMessage({
           type: 'text',
-          text: "Please enter your AT&T ID:"
+          text: "Please enter your AT&T ID (email or username):"
         });
         break;
 
