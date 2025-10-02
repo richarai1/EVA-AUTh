@@ -257,38 +257,6 @@ import { ChatMessage } from '../../models/chat.model';
                   <div class="analysis-details">
                     <p class="analysis-text">{{ message.card.text }}</p>
                     
-                    <div *ngIf="message.card.billBreakdown" class="bill-breakdown">
-                      <h4 class="breakdown-title">Line-by-Line Changes</h4>
-                      <div *ngFor="let item of message.card.billBreakdown" class="breakdown-item">
-                        <div class="breakdown-header">
-                          <div class="line-info">
-                            <span class="line-number">{{ item.lineNumber }}</span>
-                            <span class="line-name">{{ item.name }}</span>
-                          </div>
-                          <span class="breakdown-change" [class.increase]="item.changeAmount > 0" [class.decrease]="item.changeAmount < 0">
-                            {{ item.changeText }}
-                          </span>
-                        </div>
-                        <ul class="breakdown-details">
-                          <li *ngFor="let detail of item.details">{{ detail }}</li>
-                        </ul>
-                      </div>
-                      
-                      <div class="summary-totals">
-                        <div class="total-item">
-                          <span class="total-label">Lines with increases:</span>
-                          <span class="total-value">{{ message.card.linesWithIncreases }}</span>
-                        </div>
-                        <div class="total-item">
-                          <span class="total-label">Lines unchanged:</span>
-                          <span class="total-value">{{ message.card.linesUnchanged }}</span>
-                        </div>
-                        <div class="total-item">
-                          <span class="total-label">Total lines analyzed:</span>
-                          <span class="total-value">{{ message.card.totalLines }}</span>
-                        </div>
-                      </div>
-                    </div>
                     
                     <div class="bill-totals">
                       <p><strong>{{ message.card.autoPayInfo }}</strong></p>
@@ -713,6 +681,7 @@ import { ChatMessage } from '../../models/chat.model';
       padding: 8px 16px;
       border-radius: 20px;
       font-size: 14px;
+      text-align:left;
       cursor: pointer;
       transition: all 0.2s ease;
     }
@@ -737,7 +706,7 @@ import { ChatMessage } from '../../models/chat.model';
       color: var(--primary-color);
       padding: 4px 8px;
       text-decoration: underline;
-      font-size: 14px;
+      font-size: 11px;
     }
 
     .action-button.link-button:hover {
