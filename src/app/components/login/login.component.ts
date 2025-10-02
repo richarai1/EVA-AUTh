@@ -213,7 +213,12 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     // Set the user flow context in AuthService based on where we're redirecting
     const redirectPath = this.authService.getRedirectPath();
-    const userContext = redirectPath === '/small-business' ? 'small-business' : 'consumer';
+    let userContext: 'consumer' | 'small-business' | 'enterprise' = 'consumer';
+    if (redirectPath === '/small-business') {
+      userContext = 'small-business';
+    } else if (redirectPath === '/enterprise') {
+      userContext = 'enterprise';
+    }
     this.authService.setUserFlowContext(userContext);
 
     this.authService.logout();
@@ -231,7 +236,12 @@ export class LoginComponent implements OnInit {
       if (this.inputValue.trim()) {
         // Ensure the user flow context is set before login
         const redirectPath = this.authService.getRedirectPath();
-        const userContext = redirectPath === '/small-business' ? 'small-business' : 'consumer';
+        let userContext: 'consumer' | 'small-business' | 'enterprise' = 'consumer';
+        if (redirectPath === '/small-business') {
+          userContext = 'small-business';
+        } else if (redirectPath === '/enterprise') {
+          userContext = 'enterprise';
+        }
         this.authService.setUserFlowContext(userContext);
 
         this.authService.login(this.inputValue, this.inputValue).subscribe({

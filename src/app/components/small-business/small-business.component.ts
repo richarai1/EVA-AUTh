@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 import { ChatService } from '../../services/chat.service';
 import { ChatWidgetComponent } from '../chat-widget/chat-widget.component';
 
@@ -193,6 +194,7 @@ import { ChatWidgetComponent } from '../chat-widget/chat-widget.component';
 export class SmallBusinessComponent implements OnInit {
   constructor(
     private router: Router,
+    private authService: AuthService,
     private chatService: ChatService
   ) {}
 
@@ -211,6 +213,7 @@ export class SmallBusinessComponent implements OnInit {
   }
 
   navigateToLogin(): void {
+    this.authService.setRedirectPath('/small-business');
     this.router.navigate(['/login']);
   }
 

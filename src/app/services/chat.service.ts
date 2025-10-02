@@ -871,12 +871,20 @@ private userName ="";
   reinitializeAfterLogin(): void {
     // Only proceed if we haven't already reinitialized
     if (this.pendingAction || this.lastUserMessage) {
-      // Add the "Great! Thanks for signing in" message with delay
+      // Add the sign-in message with delay
       setTimeout(() => {
-        this.addBotMessage({
-          type: 'text',
-          text: 'Great! Thanks for signing in.'
-        });
+        // Different messages based on user flow context
+        if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
+          this.addBotMessage({
+            type: 'text',
+            text: 'You are now signed in'
+          });
+        } else {
+          this.addBotMessage({
+            type: 'text',
+            text: 'Great! Thanks for signing in.'
+          });
+        }
 
         // Start the BAN flow only for small-business and enterprise users
         setTimeout(() => {
@@ -887,7 +895,7 @@ private userName ="";
             this.executeUserRequest();
           }
         }, 1200); // Increased to 1.2 seconds before asking for BAN or executing request
-      }, 800); // Increased to 0.8 seconds before "Great! Thanks for signing in"
+      }, 800); // Increased to 0.8 seconds before sign-in message
     }
   }
 
