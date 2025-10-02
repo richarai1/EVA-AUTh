@@ -475,40 +475,40 @@ private userName ="";
           { text: "Pay Bill", action: "pay_bill_prompt" }
         ]
       });
-    } else {
-      // Consumer bill summary
+    }else {
+      // ✅ Consumer Flow Bill Summary
       const billData: BillSummaryData = {
-        companyName: "Richa Rai",
-        companyAddress: "",
-        pageInfo: "",
+        companyName: "AT&T Consumer",
+        companyAddress: "123 Main Street\nDallas, TX 75201",
         issueDate: "Sep 15, 2025",
-        accountNumber: "",
-        foundationAccount: "",
-        invoice: "",
-        totalDue: 55.51,
-        dueDate: "Sep 15, 2025",
-        lastBill: 55.51,
-        paymentAmount: 0.00,
-        paymentDate: "",
+        accountNumber: "****5678",
+        invoice: "INV20250915",
+        totalDue: 125.50,
+        dueDate: "Oct 05, 2025",
+        lastBill: 110.50,
+        paymentAmount: 110.50,
+        paymentDate: "Sep 15 - Thank you!",
         remainingBalance: 0.00,
         services: [
-          { name: "Internet", amount: 55.51 }
+          { name: "Wireless Plan", amount: 95.00 },
+          { name: "Device Installment", amount: 20.00 },
+          { name: "Taxes & Fees", amount: 10.50 }
         ],
-        totalServices: 55.51,
-        billingPeriod: "08/02 to 09/01",
+        totalServices: 125.50,
+        billingPeriod: "08/15 to 09/14",
         adjustments: 0.00
       };
-
+  
       this.addBotMessage({
         type: 'bill-summary',
         title: "📄 Your AT&T Bill Summary",
-        billData: billData,
+        billData,
         buttons: [
           { text: "Download PDF", action: "download_pdf" },
           { text: "Pay Bill", action: "pay_bill_prompt" }
         ]
       });
-    }
+        }
   }
 
   handleButtonClick(action: string, data?: any): void {
