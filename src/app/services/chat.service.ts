@@ -1350,8 +1350,8 @@ export class ChatService {
 
   // Method to reinitialize chat after login
   reinitializeAfterLogin(): void {
-    // Only proceed if we have a pending action or last user message
-    if (this.pendingAction && (this.pendingAction !== 'login') && (this.lastUserMessage || this.pendingAction)) {
+    // Only proceed if we have a pending action (excluding login itself)
+    if (this.pendingAction && this.pendingAction !== 'login') {
       // Add the sign-in message with delay
       setTimeout(() => {
         // Different messages based on user flow context
