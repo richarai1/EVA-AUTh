@@ -1732,13 +1732,7 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
   }
 
   handleButtonClick(action: string, data?: any): void {
-    if (action === 'login') {
-      const userContext = this.chatService.getUserFlowContext();
-      const redirectPath = userContext === 'small-business' ? '/small-business' : '/home';
-      this.authService.setRedirectPath(redirectPath);
-      sessionStorage.setItem('reopenChatAfterLogin', 'true');
-      this.router.navigate(['/login']);
-    } else if (action === 'navigate_payment') {
+    if (action === 'navigate_payment') {
       this.router.navigate(['/payment']);
       this.chatService.closeChat();
     } else if (action === 'navigate_to_bills') {
