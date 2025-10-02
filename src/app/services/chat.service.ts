@@ -880,11 +880,16 @@ private userName ="";
           type: 'text',
           text: 'Great! Thanks for signing in.'
         });
-        
-        // Start the FAN/BAN flow
+
+        // Start the BAN flow only for small-business users
         setTimeout(() => {
-          this.askForBAN();
-        }, 1200); // Increased to 1.2 seconds before asking for FAN
+          if (this.userFlowContext === 'small-business') {
+            this.askForBAN();
+          } else {
+            // For consumer users, directly execute their pending request
+            this.executeUserRequest();
+          }
+        }, 1200); // Increased to 1.2 seconds before asking for BAN or executing request
       }, 800); // Increased to 0.8 seconds before "Great! Thanks for signing in"
     }
   }
