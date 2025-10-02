@@ -5,6 +5,7 @@ import { PremierComponent } from './components/premier/premier.component';
 import { BillsComponent } from './components/bills/bills.component';
 import { PaymentComponent } from './components/payment/payment.component';
 import { SmallBusinessComponent } from './components/small-business/small-business.component';
+import { EnterpriseComponent } from './components/enterprise/enterprise.component';
 import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -14,5 +15,6 @@ export const routes: Routes = [
   { path: 'bills', component: BillsComponent },
   { path: 'payment', component: PaymentComponent },
   { path: 'small-business', component: SmallBusinessComponent },
+  { path: 'enterprise', component: EnterpriseComponent },
   { path: '**', redirectTo: '' }
 ];

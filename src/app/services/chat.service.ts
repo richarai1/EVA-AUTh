@@ -9,7 +9,7 @@ import { ChatMessage, ChatCard, BillSummaryData } from '../models/chat.model';
 export class ChatService {
   private messagesSubject = new BehaviorSubject<ChatMessage[]>([]);
   public messages$ = this.messagesSubject.asObservable();
-  private userFlowContext: 'consumer' | 'small-business' = 'consumer';
+  private userFlowContext: 'consumer' | 'small-business' | 'enterprise' = 'consumer';
 
   private viewBillUtterances = [
     "view my bill",
@@ -68,11 +68,11 @@ private userName ="";
 
   constructor(private authService: AuthService) {}
 
-  setUserFlowContext(context: 'consumer' | 'small-business'): void {
+  setUserFlowContext(context: 'consumer' | 'small-business' | 'enterprise'): void {
     this.userFlowContext = context;
   }
 
-  getUserFlowContext(): 'consumer' | 'small-business' {
+  getUserFlowContext(): 'consumer' | 'small-business' | 'enterprise' {
     return this.userFlowContext;
   }
 
@@ -334,7 +334,7 @@ private userName ="";
 
   private handlePayBillRequest(): void {
     if (this.authService.isAuthenticated()) {
-      if (this.userFlowContext === 'small-business') {
+      if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
         this.addBotMessage({
           type: 'text',
           text: "Please click here to make payment.",
@@ -370,7 +370,7 @@ private userName ="";
 
 
   private showBillAnalysis(): void {
-    if (this.userFlowContext === 'small-business') {
+    if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
       // Business/Enterprise user - show detailed multi-line analysis
       const totalLines = 127;
       const linesWithIncreases = 8;
@@ -445,7 +445,7 @@ private userName ="";
   }
 
   private showBillSummary(): void {
-    if (this.userFlowContext === 'small-business') {
+    if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
       const billData: BillSummaryData = {
         companyName: "Boeing Telecom",
         companyAddress: "5834 BETHELVIEW RD\nCUMMING, GA 30040-6312",
@@ -563,7 +563,7 @@ private userName ="";
         break;
 
       case 'pay_bill_prompt':
-        if (this.userFlowContext === 'small-business') {
+        if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
           this.addBotMessage({
             type: 'text',
             text: "To manage your bill payments, please visit the payment page where you can view detailed billing information and make payments.",
@@ -814,7 +814,7 @@ private userName ="";
   }
 
   private handleDownloadPdf(): void {
-    if (this.userFlowContext === 'small-business') {
+    if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
       this.addBotMessage({
         type: 'text',
         text: "Preparing your bill for download..."
@@ -878,9 +878,9 @@ private userName ="";
           text: 'Great! Thanks for signing in.'
         });
 
-        // Start the BAN flow only for small-business users
+        // Start the BAN flow only for small-business and enterprise users
         setTimeout(() => {
-          if (this.userFlowContext === 'small-business') {
+          if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
             this.askForBAN();
           } else {
             // For consumer users, directly execute their pending request
@@ -937,7 +937,7 @@ private userName ="";
           this.clearPendingState();
         }, 1000);
       } else {
-        // For small-business flow, show bill analysis directly
+        // For small-business and enterprise flow, show bill analysis directly
         this.addBotMessage({
           type: 'text',
           text: 'Let me analyze your bill for you...'
@@ -965,7 +965,7 @@ private userName ="";
       }, 1500); // Increased to 1.5 seconds
     } else if (this.pendingAction === 'pay_bill' || this.lastUserQuestion.toLowerCase().includes('pay')) {
       setTimeout(() => {
-        if (this.userFlowContext === 'small-business') {
+        if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
           this.addBotMessage({
             type: 'text',
             text: "Please click her to pay bill.",
