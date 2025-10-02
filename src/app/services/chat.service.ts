@@ -279,12 +279,20 @@ export class ChatService {
       this.attId = text.trim();
       this.addBotMessage({
         type: 'text',
-        text: "Redirecting to login..."
+        text: `Thank you. Verifying your AT&T ID: ${this.attId}...`
       });
+
       setTimeout(() => {
-        this.router.navigate(['/login']);
-        this.currentStep = null;
-      }, 1000);
+        this.addBotMessage({
+          type: 'text',
+          text: "Account found. Redirecting you to the secure login page..."
+        });
+
+        setTimeout(() => {
+          this.router.navigate(['/login']);
+          this.currentStep = null;
+        }, 2000);
+      }, 1500);
       return;
     }
     if (this.currentStep === 'ban') {
