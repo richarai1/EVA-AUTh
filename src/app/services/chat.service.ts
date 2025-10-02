@@ -476,24 +476,27 @@ private userName ="";
         ]
       });
     } else {
+      // Consumer bill summary
       const billData: BillSummaryData = {
-        companyName: "Boeing Telecom",
-        companyAddress: "5834 BETHELVIEW RD\nCUMMING, GA 30040-6312",
+        companyName: "Richa Rai",
+        companyAddress: "",
         pageInfo: "",
         issueDate: "Sep 15, 2025",
-        accountNumber: this.banNumber || "287301224446",
-        foundationAccount: "59285142",
-        invoice: "287301224446X10092023",
-        totalDue: 6142.25,
+        accountNumber: "",
+        foundationAccount: "",
+        invoice: "",
+        totalDue: 55.51,
         dueDate: "Sep 15, 2025",
-        lastBill: 9466.04,
-        paymentAmount: 9466.04,
-        paymentDate: "Oct 1 - Thank you!",
+        lastBill: 55.51,
+        paymentAmount: 0.00,
+        paymentDate: "",
         remainingBalance: 0.00,
         services: [
-          { name: "Wireless", amount: 6142.25 }
+          { name: "Internet", amount: 55.51 }
         ],
-        totalServices: 6142.25
+        totalServices: 55.51,
+        billingPeriod: "08/02 to 09/01",
+        adjustments: 0.00
       };
 
       this.addBotMessage({

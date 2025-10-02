@@ -107,7 +107,8 @@ import { ChatMessage } from '../../models/chat.model';
               
               <!-- Bill Summary Card -->
               <div *ngIf="message.card.type === 'bill-summary' && message.card.billData" class="bill-summary-card">
-                <div class="bill-header">
+                <!-- Business Bill Header -->
+                <div *ngIf="message.card.billData.companyAddress" class="bill-header">
                   <div class="bill-header-content">
                     <div class="bill-header-row">
                       <div class="company-info">
@@ -139,7 +140,14 @@ import { ChatMessage } from '../../models/chat.model';
                     </div>
                   </div>
                 </div>
-                <div class="bill-main-content">
+
+                <!-- Consumer Bill Header -->
+                <div *ngIf="!message.card.billData.companyAddress" class="consumer-bill-header">
+                  <h3 class="consumer-bill-title">{{ message.card.billData.companyName }}</h3>
+                </div>
+
+                <!-- Business Bill Main Content (only for business bills) -->
+                <div *ngIf="message.card.billData.companyAddress" class="bill-main-content">
                   <div class="bill-left-content">
                     <div class="autopay-section">
                       <strong>AutoPay:</strong> Save time and money with AutoPay. Enroll today!
@@ -161,7 +169,21 @@ import { ChatMessage } from '../../models/chat.model';
                     </div>
                   </div>
                 </div>
-                <div class="account-summary">
+                <!-- Consumer Account Summary -->
+                <div *ngIf="message.card.billData.billingPeriod" class="account-summary">
+                  <h3 class="section-title">Current billing cycle</h3>
+                  <div class="summary-item">
+                    <span class="summary-label">Last bill ({{ message.card.billData.billingPeriod }})</span>
+                    <span class="summary-amount">{{ message.card.billData.lastBill.toFixed(2) }}</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="summary-label">Adjustments</span>
+                    <span class="summary-amount">{{ message.card.billData.adjustments?.toFixed(2) || '0.00' }}</span>
+                  </div>
+                </div>
+
+                <!-- Business Account Summary -->
+                <div *ngIf="!message.card.billData.billingPeriod" class="account-summary">
                   <h3 class="section-title">Account Summary</h3>
                   <div class="summary-item">
                     <span class="summary-label">Last Bill</span>
@@ -177,23 +199,30 @@ import { ChatMessage } from '../../models/chat.model';
                   </div>
                 </div>
                 <div class="service-summary">
-                  <h3 class="section-title">Service Summary</h3>
+                  <h3 class="section-title">Service summary</h3>
                   <div *ngFor="let service of message.card.billData.services" class="service-item">
                     <div class="service-left">
-                      <span class="service-icon">📱</span>
+                      <span class="service-icon" *ngIf="service.name === 'Wireless'">📱</span>
+                      <span class="service-icon" *ngIf="service.name === 'Internet'">🌐</span>
                       <div>
                         <div class="service-name">{{ service.name }}</div>
-                        <div class="service-page">{{ service.pageRef }}</div>
+                        <div class="service-page" *ngIf="service.pageRef">{{ service.pageRef }}</div>
                       </div>
                     </div>
                     <span class="service-amount">{{ service.amount.toFixed(2) }}</span>
                   </div>
-                  <div class="total-services-row">
-                    <span class="total-services-label">Total Services</span>
-                    <span class="total-services-amount">{{ message.card.billData.totalServices.toFixed(2) }}</span>
+                </div>
+
+                <!-- Consumer Bill Total -->
+                <div *ngIf="message.card.billData.billingPeriod" class="final-total consumer-total">
+                  <div class="final-total-content">
+                    <span class="final-total-label">Bill total:</span>
+                    <span class="final-total-amount">{{ message.card.billData.totalDue.toFixed(2) }}</span>
                   </div>
                 </div>
-                <div class="final-total">
+
+                <!-- Business Bill Total -->
+                <div *ngIf="!message.card.billData.billingPeriod" class="final-total">
                   <div class="final-total-content">
                     <div class="final-total-left">
                       <span class="final-total-label">Total Amount Due</span>
@@ -1267,6 +1296,32 @@ import { ChatMessage } from '../../models/chat.model';
       font-size: 20px;
       font-weight: bold;
       color: #212529;
+    }
+
+    .consumer-bill-header {
+      padding: 20px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .consumer-bill-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #212529;
+      margin: 0;
+    }
+
+    .consumer-total .final-total-content {
+      padding: 4px 0;
+    }
+
+    .consumer-total .final-total-label {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .consumer-total .final-total-amount {
+      font-size: 18px;
     }
 
     .payment-method-card {

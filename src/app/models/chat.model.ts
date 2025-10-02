@@ -89,6 +89,8 @@ export interface BillSummaryData {
   remainingBalance: number;
   services: ServiceItem[];
   totalServices: number;
+  billingPeriod?: string;
+  adjustments?: number;
 }
 
 export interface ServiceItem {
