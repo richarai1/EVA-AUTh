@@ -6,7 +6,7 @@ import { User } from '../models/chat.model';
   providedIn: 'root'
 })
 export class AuthService {
-  private currentUserSubject = new BehaviorSubject<User>({ email: '', isAuthenticated: false });
+  private currentUserSubject = new BehaviorSubject<User>({ email: '',userName:'', isAuthenticated: false });
   public currentUser$ = this.currentUserSubject.asObservable();
   private redirectPath: string = '/home';
 
@@ -35,7 +35,7 @@ export class AuthService {
       // Mock authentication - in real app, this would be an HTTP call
       setTimeout(() => {
         if (email && password.length >= 8) {
-          const user: User = { email, isAuthenticated: true };
+          const user: User = { email, userName: '',isAuthenticated: true };
           localStorage.setItem('currentUser', JSON.stringify(user));
           this.currentUserSubject.next(user);
           observer.next(true);
@@ -49,7 +49,7 @@ export class AuthService {
 
   logout(): void {
     localStorage.removeItem('currentUser');
-    this.currentUserSubject.next({ email: '', isAuthenticated: false });
+    this.currentUserSubject.next({ email: '', userName: '',isAuthenticated: false });
   }
 
   isAuthenticated(): boolean {
