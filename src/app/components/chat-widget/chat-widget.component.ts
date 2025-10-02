@@ -348,11 +348,12 @@ import { ChatMessage } from '../../models/chat.model';
 
               <!-- Buttons -->
               <div *ngIf="message.card.buttons && message.card.buttons.length > 0" class="message-buttons">
-                <button 
+                <button
                   *ngFor="let button of message.card.buttons"
                   (click)="handleButtonClick(button.action, button.data)"
                   class="action-button"
                   [class.primary-button]="button.primary"
+                  [class.link-button]="button.asLink"
                 >
                   {{ button.text }}
                 </button>
@@ -728,6 +729,21 @@ import { ChatMessage } from '../../models/chat.model';
 
     .action-button.primary-button:hover {
       background: var(--primary-hover);
+    }
+
+    .action-button.link-button {
+      background: transparent;
+      border: none;
+      color: var(--primary-color);
+      padding: 4px 8px;
+      text-decoration: underline;
+      font-size: 14px;
+    }
+
+    .action-button.link-button:hover {
+      background: transparent;
+      color: var(--primary-hover);
+      text-decoration: underline;
     }
 
     /* Form Card Styles */

@@ -43,6 +43,7 @@ export interface ChatButton {
   action: string;
   data?: any;
   primary?: boolean;
+  asLink?: boolean;
 }
 
 export interface BillBreakdownItem {

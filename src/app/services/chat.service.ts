@@ -433,10 +433,10 @@ export class ChatService {
       type: 'text',
       text: "Which account would you like to pay? Select below:",
       buttons: [
-        { text: "2873754559 – LENNA CORPORATE CTR ($100,000.00)", action: "select_ban_2", primary: false },
-        { text: "2874278802 – LENNA CORPORATION ($33,000.00)", action: "select_ban_3", primary: false },
-        { text: "Enter BAN manually", action: "enter_ban_manually", primary: false },
-        { text: "How to find my BAN?", action: "show_ban_help", primary: false }
+        { text: "2873754559 – LENNA CORPORATE CTR ($100,000.00)", action: "select_ban_2", primary: false, asLink: true },
+        { text: "2874278802 – LENNA CORPORATION ($33,000.00)", action: "select_ban_3", primary: false, asLink: true },
+        { text: "Enter BAN manually", action: "enter_ban_manually", primary: false, asLink: true },
+        { text: "How to find my BAN?", action: "show_ban_help", primary: false, asLink: true }
       ]
     });
   }
