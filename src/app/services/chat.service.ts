@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { AuthService } from './auth.service';
-import { ChatMessage, ChatCard, BillSummaryData } from '../models/chat.model';
+import { ChatMessage, ChatCard, BillSummaryData, OptionCard, ChatButton } from '../models/chat.model';
 
 @Injectable({
   providedIn: 'root'
@@ -30,10 +30,10 @@ export class ChatService {
     "how much do I owe",
     "bill amount",
     "get my bill"
-];
+  ];
 
-// Natural language variations for "pay bill"
-private payBillUtterances = [
+  // Natural language variations for "pay bill"
+  private payBillUtterances = [
     "pay my bill",
     "pay bill",
     "make a payment",
@@ -49,12 +49,12 @@ private payBillUtterances = [
     "settle outstanding",
     "pay account balance",
     "pay amount due"
-];
-private billAnalysisUtterances = [
-  "why my bill is too high", "my bill is high","why bill is so high",
-  "bill analysis"
-];
-private userName ="";
+  ];
+  private billAnalysisUtterances = [
+    "why my bill is too high", "my bill is high","why bill is so high",
+    "bill analysis"
+  ];
+  private userName = "";
   private isOpenSubject = new BehaviorSubject<boolean>(false);
   public isOpen$ = this.isOpenSubject.asObservable();
 
@@ -62,13 +62,61 @@ private userName ="";
   private lastUserMessage: ChatMessage | null = null;
   private pendingAction: string = '';
 
-  private currentStep:  'ban' | 'account_selection' | 'payment_amount' | 'payment_method' | null = null;
+  private currentStep: 'ban' | 'account_selection' | 'payment_amount' | 'payment_method' | null = null;
 
   private banNumber: string = '';
   private selectedAccount: string = '';
   private selectedAccountName: string = '';
   private selectedAccountBalance: string = '';
   private paymentAmount: string = '';
+
+  private smallBusinessAccounts = [
+    { ban: '00060030', name: 'LENNAR CORPORATE CTR-R CCDA MAC CRU', balance: 0.00 },
+    { ban: '287237545598', name: 'LENNAR CORPORATE CTR', balance: 64.55 },
+    { ban: '287242788082', name: 'LENNAR CORPORATION', balance: 10.15 },
+    { ban: '287244036928', name: 'LENNAR CORPORATIONS', balance: 17.15 },
+    { ban: '287245050664', name: 'LENNAR CORPORATION', balance: 146.76 },
+    { ban: '287245544976', name: 'LENNAR CORPORATE CTR', balance: 41.14 },
+    { ban: '287261139597', name: 'LENNAR CORPORATE CTR-N 1 CCDA MAC I', balance: 587.26 },
+    { ban: '287262877679', name: 'LENNAR CORPORATION-MAIN ACCT', balance: 133164.08 },
+    { ban: '287263043039', name: 'LENNAR CORPORATE', balance: 82.38 },
+    { ban: '287295433717', name: 'SANDRA A PETERSON', balance: 59.18 },
+    { ban: '287302190660', name: 'LENNAR CORPORATION', balance: 2494.25 },
+    { ban: '287311379786', name: 'LENNAR CORPORATIONS', balance: 45.17 },
+    { ban: '287311518174', name: 'LENNAR CORPORATIONS', balance: 39.58 },
+    { ban: '287312984413', name: 'LENNAR CORPORATIONS', balance: 98.45 },
+    { ban: '287313066711', name: 'LENNAR CORPORATIONS', balance: 69.01 },
+    { ban: '287313129638', name: 'LENNAR CORPORATIONS', balance: 90.09 },
+    { ban: '287313136227', name: 'LENNAR CORPORATIONS', balance: 90.09 },
+    { ban: '287313163402', name: 'LENNAR CORPORATIONS', balance: 89.04 },
+    { ban: '287313211164', name: 'LENNAR CORPORATIONS', balance: 87.99 },
+    { ban: '287313227585', name: 'LENNAR CORPORATIONS', balance: 85.94 },
+    { ban: '287313335130', name: 'LENNAR CORPORATIONS', balance: 80.68 },
+    { ban: '287313407599', name: 'LENNAR CORPORATIONS', balance: 88.53 },
+    { ban: '287313459752', name: 'LENNAR CORPORATIONS', balance: 59.38 },
+    { ban: '870573174', name: 'LENNAR CORPORATIONS', balance: 203.17 },
+    { ban: '870785761', name: 'LENNAR CORPORATIONS', balance: 585.68 },
+    { ban: '991668185', name: 'LENNAR', balance: 109.16 },
+    { ban: '991935678', name: 'LENNAR CORP', balance: 324.74 },
+    { ban: '993043300', name: 'LENNAR CORPORATION', balance: 12.32 },
+    { ban: '993201573', name: 'US HOME LONE TREE DIVISION', balance: 111.14 },
+    { ban: '993520342', name: 'KEVIN REID', balance: 106.20 },
+    { ban: '993520433', name: 'JAMES ELIZONDO', balance: 106.20 },
+    { ban: '993520502', name: 'KEITH SHEFIELD', balance: 106.20 },
+    { ban: '994053973', name: 'LENNAR CORPORATION GSM-R', balance: 182.14 },
+    { ban: '994089726', name: 'LENNAR CORPORATION GSM-R', balance: 446.52 },
+    { ban: '994372219', name: 'US HOME DENVER DIVISION', balance: 198.21 },
+    { ban: '994879380', name: 'LENNAR CORPORATION GSM-R', balance: 273.25 },
+    { ban: '995098581', name: 'LENNAR URBAN DIVISION', balance: 401.94 },
+    { ban: '995154671', name: 'LENNAR CORPORATION GSM-R', balance: 417.38 },
+    { ban: '995494832', name: 'LENNAR CORPORATION', balance: 259.33 },
+    { ban: '996046081', name: 'LENNAR CORPORATION GSM-R', balance: 100.05 },
+    { ban: '996185136', name: 'LENNAR CORPORATION', balance: 350.96 },
+    { ban: '996233953', name: 'LENNAR CORPORATION', balance: 83.45 },
+    { ban: '996243751', name: 'LENNAR CORPORATION-SAN DIEGO URBAN', balance: 69.60 },
+    { ban: '996367670', name: 'LENNAR CORPORATION GILBERT', balance: 33.03 },
+    { ban: '996440272', name: 'LENNAR CORPORATION PHIL FREEBERN', balance: 260.31 }
+  ];
 
   constructor(private authService: AuthService) {}
 
@@ -103,7 +151,6 @@ private userName ="";
 
   private initializeGuestChat(): void {
     // Show business security notice first
-    
 
     // Show connection status
     setTimeout(() => {
@@ -147,8 +194,6 @@ private userName ="";
         this.messagesSubject.next([...messages, optionsMessage]);
       }, 2000);
     }, 1000);
-
-   
   }
 
   private initializeAuthenticatedChat(): void {
@@ -164,7 +209,8 @@ private userName ="";
           { text: "View Bill", action: "view_bill", primary: true },
           { text: "Pay Bill", action: "pay_bill", primary: true },
           { text: "Download Bill", action: "download_bill", primary: true },
-          { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
+          { text: "Why my bill is too high?", action: "bill_analysis", primary: true },
+          { text: "Export Bills", action: "export_bills", primary: false }
         ]
       }
     };
@@ -201,14 +247,7 @@ private userName ="";
       utterances.some(u => lowerText.includes(u.toLowerCase()));
     if (this.currentStep === 'ban') {
       this.banNumber = text.trim();
-      this.addBotMessage({
-        type: 'text',
-        text: `Thank you. BAN set to ${this.banNumber}.`
-      });
-      this.currentStep = null;
-      setTimeout(() => {
-        this.executeUserRequest();
-      }, 500);
+      this.handleAfterBanSet();
       return;
     }
 
@@ -230,7 +269,8 @@ private userName ="";
           { text: "View Bill", action: "view_bill", primary: true },
           { text: "Pay Bill", action: "pay_bill", primary: true },
           { text: "Download Bill", action: "download_bill", primary: true },
-          { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
+          { text: "Why my bill is too high?", action: "bill_analysis", primary: true },
+          { text: "Export Bills", action: "export_bills", primary: false }
         ]
       });
     }
@@ -238,7 +278,12 @@ private userName ="";
 
   private handleViewBillRequest(): void {
     if (this.authService.isAuthenticated()) {
-      this.showBillSummary();
+      if (this.userFlowContext === 'small-business') {
+        this.pendingAction = 'view_bill';
+        this.askForBANSelection();
+      } else {
+        this.showBillSummary();
+      }
     } else {
       this.pendingAction = 'view_bill';
       sessionStorage.setItem('reopenChatAfterLogin', 'true');
@@ -330,14 +375,9 @@ private userName ="";
 
   private handlePayBillRequest(): void {
     if (this.authService.isAuthenticated()) {
-      if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
-        this.addBotMessage({
-          type: 'text',
-          text: "Please click here to make payment.",
-          buttons: [
-            { text: "Go to Payment Page", action: "navigate_to_bills", primary: true }
-          ]
-        });
+      if (this.userFlowContext === 'small-business') {
+        this.pendingAction = 'pay_bill';
+        this.showPayOptions();
       } else {
         this.addBotMessage({
           type: 'text',
@@ -364,10 +404,138 @@ private userName ="";
     }
   }
 
+  private showPayOptions(): void {
+    const accounts = [
+      { ban: '2873754559', name: 'LENNA CORPORATE CTR', balance: 100000 },
+      { ban: '2874278802', name: 'LENNA CORPORATION', balance: 33000 }
+    ];
+    const totalDue = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+
+    let text = `Your accounts and amounts due:\n\n`;
+    accounts.forEach(acc => {
+      text += `${acc.ban} – ${acc.name}: $${acc.balance.toLocaleString()}\n`;
+    });
+    text += `\nTotal due across all accounts: $${totalDue.toLocaleString()}\n\nWould you like to pay the full total or select a specific account to pay?`;
+
+    this.addBotMessage({
+      type: 'text',
+      text: text,
+      buttons: [
+        { text: `Pay Full Total ($${totalDue.toLocaleString()})`, action: 'pay_full_total', primary: true },
+        { text: 'Select Specific Account', action: 'select_pay_account', primary: true }
+      ]
+    });
+  }
+
+  private askForPayBANSelection(): void {
+    this.currentStep = 'ban';
+    this.addBotMessage({
+      type: 'text',
+      text: "Which account would you like to pay? Select below:",
+      buttons: [
+        { text: "2873754559 – LENNA CORPORATE CTR ($100,000.00)", action: "select_ban_2", primary: false },
+        { text: "2874278802 – LENNA CORPORATION ($33,000.00)", action: "select_ban_3", primary: false },
+        { text: "Enter BAN manually", action: "enter_ban_manually", primary: false },
+        { text: "How to find my BAN?", action: "show_ban_help", primary: false }
+      ]
+    });
+  }
+
+  private askForBANSelection(): void {
+    this.currentStep = 'ban';
+    this.addBotMessage({
+      type: 'text',
+      text: "Select your Billing Account Number (BAN) below, or enter it manually:",
+      buttons: [
+        { text: "00060030 – LENNA CORPORATE CTR-CCDA MAC CRU", action: "select_ban_1", primary: false },
+        { text: "2873754559 – LENNA CORPORATE CTR", action: "select_ban_2", primary: false },
+        { text: "2874278802 – LENNA CORPORATION", action: "select_ban_3", primary: false },
+        { text: "Enter BAN manually", action: "enter_ban_manually", primary: false },
+        { text: "How to find my BAN?", action: "show_ban_help", primary: false }
+      ]
+    });
+  }
+
+  private getAccountDataForBan(ban: string): {name: string, balance: string} | null {
+    const accounts: {[key: string]: {name: string, balance: string}} = {
+      '00060030': {name: 'LENNA CORPORATE CTR-CCDA MAC CRU', balance: '$0.00'},
+      '2873754559': {name: 'LENNA CORPORATE CTR', balance: '$100000.00'},
+      '2874278802': {name: 'LENNA CORPORATION', balance: '$33000.00'},
+    };
+    return accounts[ban] || null;
+  }
+
+  private handleAfterBanSet(): void {
+    this.addBotMessage({
+      type: 'text',
+      text: `Thank you. Retrieving Bill details for  ${this.banNumber}.`
+    });
+
+    if (this.pendingAction === 'view_bill') {
+      setTimeout(() => {
+        const data = this.getAccountDataForBan(this.banNumber);
+        if (data) {
+          this.selectedAccount = this.banNumber;
+          this.selectedAccountName = data.name;
+          this.selectedAccountBalance = data.balance.replace('$', '');
+        }
+        this.showBillSummary();
+        this.clearPendingState();
+      }, 500);
+    } else if (this.pendingAction === 'pay_bill') {
+      setTimeout(() => {
+        const data = this.getAccountDataForBan(this.banNumber);
+        if (data) {
+          const bal = parseFloat(data.balance.replace('$', '').replace(',', ''));
+          if (bal === 0) {
+            this.addBotMessage({
+              type: 'text',
+              text: `${data.name} is already paid in full. Is there anything else I can help with?`,
+              buttons: [
+                { text: "View Bill", action: "view_bill", primary: true },
+                { text: "Pay Bill", action: "pay_bill", primary: true },
+                { text: "Download Bill", action: "download_bill", primary: true },
+                { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
+              ]
+            });
+          } else {
+            this.handleAccountSelectionForPayment(this.banNumber, data.name, data.balance.replace('$', ''));
+          }
+        } else {
+          this.addBotMessage({
+            type: 'text',
+            text: "Sorry, I couldn't find that BAN. Please try again.",
+            buttons: [
+              { text: "Select Account", action: "select_pay_account", primary: true }
+            ]
+          });
+        }
+        this.clearPendingState();
+      }, 500);
+    } else {
+      setTimeout(() => {
+        const data = this.getAccountDataForBan(this.banNumber);
+        let text = `BAN set to ${this.banNumber}.`;
+        if (data) {
+          text += ` This is ${data.name} with balance ${data.balance}.`;
+        }
+        this.addBotMessage({
+          type: 'text',
+          text,
+          buttons: [
+            { text: "View Bill", action: "view_bill", primary: true },
+            { text: "Pay Bill", action: "pay_bill", primary: true },
+            { text: "Download Bill", action: "download_bill", primary: true },
+            { text: "Why my bill is too high?", action: "bill_analysis", primary: true }
+          ]
+        });
+      }, 500);
+    }
+  }
 
   private showBillAnalysis(): void {
-    if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
-      // Business/Enterprise user - show detailed multi-line analysis
+    if (this.userFlowContext === 'small-business') {
+      // Small-business user - show detailed multi-line analysis using image data
       const totalLines = 127;
       const linesWithIncreases = 8;
       const linesUnchanged = totalLines - linesWithIncreases;
@@ -441,25 +609,47 @@ private userName ="";
   }
 
   private showBillSummary(): void {
-    if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
+    // Helper to format date as 'Sep 15, 2025'
+    const formatDate = (date: Date): string => {
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    };
+
+    // Helper for payment date format like 'Sep 01 - Thank you!'
+    const formatPaymentDate = (date: Date): string => {
+      return `${formatDate(date)} - Thank you!`;
+    };
+
+    const currentDate = new Date('2025-10-02'); // Current date
+    const issueDate = new Date('2025-08-28'); // Billed date from image
+    const dueDate = new Date('2025-09-23'); // Due date from image
+    const paymentDateObj = new Date('2025-10-01'); // Payment date from schedule image
+
+    if (this.userFlowContext === 'small-business') {
+      const ban = this.banNumber || "2873754559";
+      const data = this.getAccountDataForBan(ban);
+      const due = data ? parseFloat(data.balance.replace('$', '').replace(',', '')) : 0;
       const billData: BillSummaryData = {
-        companyName: "Boeing Telecom",
+        companyName: data ? data.name : "LENNA CORPORATE CTR",
         companyAddress: "5834 BETHELVIEW RD\nCUMMING, GA 30040-6312",
         pageInfo: "",
-        issueDate: "Sep 15, 2025",
-        accountNumber: this.banNumber || "287301224446",
-        foundationAccount: "59285142",
-        invoice: "287301224446X10092023",
-        totalDue: 6142.25,
-        dueDate: "Sep 15, 2025",
-        lastBill: 9466.04,
-        paymentAmount: 9466.04,
-        paymentDate: "Oct 1 - Thank you!",
+        issueDate: formatDate(issueDate),
+        accountNumber: ban,
+        foundationAccount: "00060030",
+        invoice: ban,
+        totalDue: due,
+        dueDate: formatDate(dueDate),
+        lastBill: due,
+        paymentAmount: due,
+        paymentDate: formatPaymentDate(paymentDateObj),
         remainingBalance: 0.00,
         services: [
-          { name: "Wireless", amount: 6142.25 }
+          { name: "Wireless", amount: due }
         ],
-        totalServices: 6142.25
+        totalServices: due
       };
 
       this.addBotMessage({
@@ -471,21 +661,21 @@ private userName ="";
           { text: "Pay Bill", action: "pay_bill_prompt" }
         ]
       });
-    }else {
+    } else {
       // ✅ Consumer Flow Bill Summary
       const billData: BillSummaryData = {
         companyName: "AT&T Consumer",
         companyAddress: "123 Main Street\nDallas, TX 75201",
         pageInfo: "",
-        issueDate: "Sep 15, 2025",
+        issueDate: formatDate(issueDate),
         accountNumber: "****5678",
         foundationAccount: "",
         invoice: "INV20250915",
         totalDue: 125.50,
-        dueDate: "Oct 05, 2025",
+        dueDate: formatDate(dueDate),
         lastBill: 110.50,
         paymentAmount: 110.50,
-        paymentDate: "Sep 15 - Thank you!",
+        paymentDate: formatPaymentDate(new Date(issueDate.getTime() - 30 * 24 * 60 * 60 * 1000)),
         remainingBalance: 0.00,
         services: [
           { name: "Wireless Plan", amount: 95.00 },
@@ -506,7 +696,7 @@ private userName ="";
           { text: "Pay Bill", action: "pay_bill_prompt" }
         ]
       });
-        }
+    }
   }
 
   handleButtonClick(action: string, data?: any): void {
@@ -561,20 +751,51 @@ private userName ="";
         break;
 
       case 'pay_bill_prompt':
-        if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
+        if (this.userFlowContext === 'small-business') {
+          const accounts = [
+            { ban: '2873754559', name: 'LENNA CORPORATE CTR', balance: 100000 },
+            { ban: '2874278802', name: 'LENNA CORPORATION', balance: 33000 }
+          ];
+          const totalDue = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+          const accountsList = accounts.map(acc => `${acc.ban} – ${acc.name}: $${acc.balance.toLocaleString()}`).join('\n');
+          const currentBalance = this.selectedAccountBalance ? parseFloat(this.selectedAccountBalance).toLocaleString() : '0.00';
+          const text = `Total due across all accounts: $${totalDue.toLocaleString()}\n\nAccounts:\n${accountsList}\n\nCurrent selected balance: $${currentBalance}\n\nWould you like to pay the full total, select a specific account, enter a BAN, or continue with the current selected BAN?`;
           this.addBotMessage({
             type: 'text',
-            text: "To manage your bill payments, please visit the payment page where you can view detailed billing information and make payments.",
+            text: text,
             buttons: [
-              { text: "Go to Payment Page", action: "navigate_to_bills", primary: true }
+              { text: `Pay Full Total ($${totalDue.toLocaleString()})`, action: 'pay_full_total', primary: true },
+              { text: `Continue with Current Selected BAN ($${currentBalance})`, action: 'pay_full_amount', primary: true },
+              { text: 'Select Account from List', action: 'select_pay_account', primary: true },
+              { text: 'Enter BAN', action: 'enter_ban_manually', primary: false }
             ]
           });
         } else {
           this.addBotMessage({
             type: 'text',
-            text: "How much do you want to pay? Feel free to enter a amount using only numbers."
+            text: "How much do you want to pay? Feel free to enter an amount using only numbers."
           });
         }
+        break;
+
+      case 'pay_full_total':
+        this.paymentAmount = '133000';
+        this.selectedAccount = 'all';
+        this.addBotMessage({
+          type: 'text',
+          text: `Great! Let me help you with your $133,000 payment for all accounts. Select one of the available options below.`
+        });
+        
+        setTimeout(() => {
+          this.addBotMessage({
+            type: 'payment-method',
+            paymentAmount: 133000
+          });
+        }, 500);
+        break;
+
+      case 'select_pay_account':
+        this.askForPayBANSelection();
         break;
 
       case 'navigate_to_bills':
@@ -597,7 +818,7 @@ private userName ="";
       case 'confirm_payment':
         this.addBotMessage({
           type: 'text',
-          text: "How much do you want to pay?\n\nFeel free to enter a amount using only numbers."
+          text: "How much do you want to pay?\n\nFeel free to enter an amount using only numbers."
         });
         break;
 
@@ -626,23 +847,46 @@ private userName ="";
      
 
       case 'select_account_1':
-        this.handleAccountSelection('00060030', 'LENNER CORPORATE CTR-CCDA MAC CRU', '$0.00');
+        this.handleAccountSelection('00060030', 'LENNA CORPORATE CTR-CCDA MAC CRU', '$0.00');
         break;
 
       case 'select_account_2':
-        this.handleAccountSelection('287237545598', 'LENNER CORPORATE CTR', '$64.55');
+        this.handleAccountSelection('2873754559', 'LENNA CORPORATE CTR', '$100000.00');
         break;
 
       case 'select_account_3':
-        this.handleAccountSelection('287242788082', 'LENNER CORPORATION', '$10.15');
+        this.handleAccountSelection('2874278802', 'LENNA CORPORATION', '$33000.00');
         break;
 
       case 'select_account_pay_2':
-        this.handleAccountSelectionForPayment('287237545598', 'LENNER CORPORATE CTR', '64.55');
+        this.handleAccountSelectionForPayment('2873754559', 'LENNA CORPORATE CTR', '100000');
         break;
 
       case 'select_account_pay_3':
-        this.handleAccountSelectionForPayment('287242788082', 'LENNER CORPORATION', '10.15');
+        this.handleAccountSelectionForPayment('2874278802', 'LENNA CORPORATION', '33000');
+        break;
+
+      case 'select_ban_1':
+        this.banNumber = '00060030';
+        this.handleAfterBanSet();
+        break;
+
+      case 'select_ban_2':
+        this.banNumber = '2873754559';
+        this.handleAfterBanSet();
+        break;
+
+      case 'select_ban_3':
+        this.banNumber = '2874278802';
+        this.handleAfterBanSet();
+        break;
+
+      case 'enter_ban_manually':
+        this.addBotMessage({
+          type: 'text',
+          text: "Please enter your Billing Account Number (BAN):"
+        });
+        this.currentStep = 'ban';
         break;
 
       case 'pay_full_amount':
@@ -664,7 +908,11 @@ private userName ="";
         });
         // Re-ask for BAN after showing help
         setTimeout(() => {
-          this.askForBAN();
+          if (this.pendingAction === 'pay_bill') {
+            this.askForPayBANSelection();
+          } else {
+            this.askForBANSelection();
+          }
         }, 1000);
         break;
 
@@ -759,6 +1007,7 @@ private userName ="";
 
   private handlePaymentAmount(amount: number): void {
     if (amount > 0) {
+      this.paymentAmount = amount.toFixed(2);
       this.addBotMessage({
         type: 'text',
         text: `Great, let me help you with your $${amount.toFixed(2)} payment. Select one of the available options below.`
@@ -844,7 +1093,7 @@ private userName ="";
   }
 
   private handleDownloadPdf(): void {
-    if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
+    if (this.userFlowContext === 'small-business') {
       this.addBotMessage({
         type: 'text',
         text: "Preparing your bill for download..."
@@ -904,7 +1153,7 @@ private userName ="";
       // Add the sign-in message with delay
       setTimeout(() => {
         // Different messages based on user flow context
-        if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
+        if (this.userFlowContext === 'small-business') {
           this.addBotMessage({
             type: 'text',
             text: 'You are now signed in'
@@ -916,10 +1165,16 @@ private userName ="";
           });
         }
 
-        // Start the BAN flow only for small-business and enterprise users
+        // Start the appropriate flow based on pendingAction for small-business users
         setTimeout(() => {
-          if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
-            this.askForBAN();
+          if (this.userFlowContext === 'small-business') {
+            if (this.pendingAction === 'pay_bill') {
+              this.showPayOptions();
+            } else if (this.pendingAction === 'view_bill') {
+              this.askForBANSelection();
+            } else {
+              this.askForBANSelection();
+            }
           } else {
             // For consumer users, directly execute their pending request
             this.executeUserRequest();
@@ -927,19 +1182,6 @@ private userName ="";
         }, 1200); // Increased to 1.2 seconds before asking for BAN or executing request
       }, 800); // Increased to 0.8 seconds before sign-in message
     }
-  }
-
- 
-
-  private askForBAN(): void {
-    this.currentStep = 'ban';
-    this.addBotMessage({
-      type: 'text',
-      text: "Now, please enter your Billing Account Number (BAN):",
-      buttons: [
-        { text: "How to find my BAN?", action: "show_ban_help", primary: false }
-      ]
-    });
   }
 
   private askForAccountSelection(context: 'view_bill' | 'pay_bill'): void {
@@ -952,13 +1194,13 @@ private userName ="";
 
     const buttons = context === 'view_bill'
       ? [
-          { text: 'Account: 00060030 – LENNER CORPORATE CTR-CCDA MAC CRU', action: 'select_account_1', primary: true },
-          { text: 'Account: 287237545598 – LENNER CORPORATE CTR', action: 'select_account_2', primary: true },
-          { text: 'Account: 287242788082 – LENNER CORPORATION', action: 'select_account_3', primary: true }
+          { text: 'Account: 00060030 – LENNA CORPORATE CTR-CCDA MAC CRU', action: 'select_account_1', primary: true },
+          { text: 'Account: 2873754559 – LENNA CORPORATE CTR', action: 'select_account_2', primary: true },
+          { text: 'Account: 2874278802 – LENNA CORPORATION', action: 'select_account_3', primary: true }
         ]
       : [
-          { text: '287237545598 – LENNER CORPORATE CTR ($64.55 due)', action: 'select_account_pay_2', primary: true },
-          { text: '287242788082 – LENNER CORPORATION ($10.15 due)', action: 'select_account_pay_3', primary: true }
+          { text: '2873754559 – LENNA CORPORATE CTR ($100,000.00 due)', action: 'select_account_pay_2', primary: true },
+          { text: '2874278802 – LENNA CORPORATION ($33,000.00 due)', action: 'select_account_pay_3', primary: true }
         ];
 
     this.addBotMessage({
@@ -1066,7 +1308,7 @@ private userName ="";
           this.clearPendingState();
         }, 1000);
       } else {
-        // For small-business and enterprise flow, show bill analysis directly
+        // For small-business flow, show bill analysis directly
         this.addBotMessage({
           type: 'text',
           text: 'Let me analyze your bill for you...'
@@ -1078,10 +1320,11 @@ private userName ="";
         }, 3000);
       }
     } else if (this.pendingAction === 'view_bill' || (this.lastUserQuestion && this.lastUserQuestion.toLowerCase().includes('view bill'))) {
-      if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
-        // For business users, ask which account
+      if (this.userFlowContext === 'small-business') {
+        // For small-business users, ask which account
         setTimeout(() => {
-          this.askForAccountSelection('view_bill');
+          this.pendingAction = 'view_bill';
+          this.askForBANSelection();
         }, 500);
       } else {
         // For consumer users, show bill summary directly
@@ -1101,10 +1344,11 @@ private userName ="";
         this.clearPendingState();
       }, 1500);
     } else if (this.pendingAction === 'pay_bill' || (this.lastUserQuestion && this.lastUserQuestion.toLowerCase().includes('pay'))) {
-      if (this.userFlowContext === 'small-business' || this.userFlowContext === 'enterprise') {
-        // For business users, ask which account to pay
+      if (this.userFlowContext === 'small-business') {
+        // For small-business users, ask for BAN then account to pay
         setTimeout(() => {
-          this.askForAccountSelection('pay_bill');
+          this.pendingAction = 'pay_bill';
+          this.showPayOptions();
         }, 500);
       } else {
         // For consumer users
