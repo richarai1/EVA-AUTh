@@ -972,7 +972,9 @@ export class ChatService {
 
       case 'login':
         this.currentStep = 'att_id';
-        this.pendingAction = 'login';
+        if (!this.pendingAction || this.pendingAction === 'login') {
+          this.pendingAction = 'login';
+        }
         this.addBotMessage({
           type: 'text',
           text: "Please enter your AT&T ID (email or username):"
