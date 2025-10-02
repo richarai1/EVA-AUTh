@@ -68,10 +68,7 @@ export class SmallBusinessComponent implements OnInit {
 
   navigateToLogin(): void {
     this.authService.setRedirectPath('/small-business');
-    this.chatService.openChat();
-    setTimeout(() => {
-      this.chatService.handleButtonClick('login');
-    }, 500);
+    this.chatService.openChatForAction('login');
   }
 
   openChat(): void {

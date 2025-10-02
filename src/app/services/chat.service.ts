@@ -83,6 +83,7 @@ export class ChatService {
   private selectedAccountBalance: string = '';
   private paymentAmount: string = '';
   private attId: string = '';
+  private skipAutoInitialize: boolean = false;
 
   private smallBusinessAccounts: Account[] = [  // UPDATED: Typed with interface, corrected due amounts
     { ban: '00060030', name: 'LENNAR CORPORATE CTR-R CCDA MAC CRU', balance: 0.00 },
@@ -142,13 +143,22 @@ export class ChatService {
     return this.userFlowContext;
   }
 
+  openChatForAction(action: string): void {
+    this.skipAutoInitialize = true;
+    this.openChat();
+    setTimeout(() => {
+      this.handleButtonClick(action);
+    }, 500);
+  }
+
   openChat(): void {
     this.isOpenSubject.next(true);
     // Always initialize chat when opening, but don't duplicate messages
     const currentMessages = this.messagesSubject.value;
-    if (currentMessages.length === 0) {
+    if (currentMessages.length === 0 && !this.skipAutoInitialize) {
       this.initializeChat();
     }
+    this.skipAutoInitialize = false;
   }
 
   closeChat(): void {
@@ -957,6 +967,7 @@ export class ChatService {
 
       case 'login':
         this.currentStep = 'att_id';
+        this.pendingAction = 'login';
         this.addBotMessage({
           type: 'text',
           text: "Please enter your AT&T ID:"
@@ -1334,8 +1345,8 @@ export class ChatService {
 
   // Method to reinitialize chat after login
   reinitializeAfterLogin(): void {
-    // Only proceed if we haven't already reinitialized
-    if (this.pendingAction || this.lastUserMessage) {
+    // Only proceed if we have a pending action or last user message
+    if (this.pendingAction && (this.pendingAction !== 'login') && (this.lastUserMessage || this.pendingAction)) {
       // Add the sign-in message with delay
       setTimeout(() => {
         // Different messages based on user flow context

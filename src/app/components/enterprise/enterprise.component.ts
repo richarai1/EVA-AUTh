@@ -248,10 +248,7 @@ export class EnterpriseComponent implements OnInit {
 
   navigateToLogin(): void {
     this.authService.setRedirectPath('/enterprise');
-    this.chatService.openChat();
-    setTimeout(() => {
-      this.chatService.handleButtonClick('login');
-    }, 500);
+    this.chatService.openChatForAction('login');
   }
 
   openChat(): void {
