@@ -1674,6 +1674,10 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
   }
 
   openChat(): void {
+    // Set the user flow context in AuthService based on current chat context
+    const userContext = this.chatService.getUserFlowContext();
+    this.authService.setUserFlowContext(userContext);
+
     this.chatService.openChat();
     this.showWelcomeHeader = this.isAuthenticated;
   }

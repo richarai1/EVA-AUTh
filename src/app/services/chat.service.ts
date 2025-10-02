@@ -149,12 +149,6 @@ private userName ="";
 
   private initializeAuthenticatedChat(): void {
     const user = this.authService.currentUserValue;
-    const userName = user.email.split('@')[0]; // Extract name from email
-    if (this.userFlowContext === 'consumer' ) {
-    user.userName = "Richa Rai";
-    } else {
-     user.userName = "INSPECTOR DRAIN INC";
-    }
     const welcomeMessage: ChatMessage = {
       id: this.generateId(),
       isUser: false,

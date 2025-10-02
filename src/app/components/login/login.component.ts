@@ -211,6 +211,11 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Set the user flow context in AuthService based on where we're redirecting
+    const redirectPath = this.authService.getRedirectPath();
+    const userContext = redirectPath === '/small-business' ? 'small-business' : 'consumer';
+    this.authService.setUserFlowContext(userContext);
+
     this.authService.logout();
     localStorage.clear();
   }
@@ -224,10 +229,14 @@ export class LoginComponent implements OnInit {
       }
     } else {
       if (this.inputValue.trim()) {
+        // Ensure the user flow context is set before login
+        const redirectPath = this.authService.getRedirectPath();
+        const userContext = redirectPath === '/small-business' ? 'small-business' : 'consumer';
+        this.authService.setUserFlowContext(userContext);
+
         this.authService.login(this.inputValue, this.inputValue).subscribe({
           next: (success) => {
             if (success) {
-              const redirectPath = this.authService.getRedirectPath();
               this.router.navigate([redirectPath]);
             } else {
               alert('Invalid credentials');
