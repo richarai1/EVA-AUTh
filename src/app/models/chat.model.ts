@@ -76,10 +76,10 @@ export interface BanOption {
 export interface BillSummaryData {
   companyName: string;
   companyAddress: string;
-  pageInfo: string;
+  pageInfo?: string;              // <-- now optional
   issueDate: string;
   accountNumber: any;
-  foundationAccount: string;
+  foundationAccount?: string;     // <-- now optional
   invoice: string;
   totalDue: number;
   dueDate: string;
@@ -92,6 +92,7 @@ export interface BillSummaryData {
   billingPeriod?: string;
   adjustments?: number;
 }
+
 
 export interface ServiceItem {
   name: string;
