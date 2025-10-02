@@ -265,7 +265,20 @@ private userName ="";
 
   private handleBillAnalysisRequest(): void {
     if (this.authService.isAuthenticated()) {
-      this.showBillAnalysis();
+      // For consumer flow, ask which service
+      if (this.userFlowContext === 'consumer') {
+        this.addBotMessage({
+          type: 'text',
+          text: "So I can get you the right info, what service are you asking about?",
+          buttons: [
+            { text: "AT&T Wireless", action: "service_wireless", primary: true },
+            { text: "AT&T Internet", action: "service_internet", primary: true }
+          ]
+        });
+      } else {
+        // For small-business flow, show bill analysis directly
+        this.showBillAnalysis();
+      }
     } else {
       this.pendingAction = 'bill_analysis';
       sessionStorage.setItem('reopenChatAfterLogin', 'true');
@@ -276,7 +289,7 @@ private userName ="";
           { text: "Sign In", action: "login", primary: true }
         ]
       });
-      
+
       setTimeout(() => {
         this.addBotMessage({
           type: 'text',
@@ -358,17 +371,8 @@ private userName ="";
 
   private showBillAnalysis(): void {
     if (this.userFlowContext === 'small-business') {
-      this.addBotMessage({
-        type: 'text',
-        text: "📊 I can help you understand why your business bill is higher!\n\nYour bill increased by $90.49 compared to last month. The main factors include:\n\n• International Day Pass charges on some lines\n• New line activations with prorated charges\n• Additional data usage on several lines\n\nFor a complete line-by-line analysis of all charges across your 127 business lines, please visit the Bills page where you can see detailed breakdowns, usage patterns, and historical comparisons.",
-        buttons: [
-          { text: "Go to Bills Page", action: "navigate_to_bills", primary: true },
-          { text: "Ask Another Question", action: "continue_chat" }
-        ]
-      });
-    } else {
-      // Simulate analyzing a large bill with many lines
-      const totalLines = 127; // Simulating a business account with many lines
+      // Business/Enterprise user - show detailed multi-line analysis
+      const totalLines = 127;
       const linesWithIncreases = 8;
       const linesUnchanged = totalLines - linesWithIncreases;
 
@@ -426,6 +430,16 @@ private userName ="";
         linesUnchanged: linesUnchanged,
         autoPayInfo: "AutoPay is scheduled to charge your business account on 10/05/2025.",
         additionalInfo: "For a complete line-by-line breakdown of all 127 lines, I can generate a detailed report. Would you like me to do that?"
+      });
+    } else {
+      // Consumer user - show simple wireless bill analysis
+      this.addBotMessage({
+        type: 'text',
+        text: "📊 I can help you understand your AT&T Wireless bill!\n\nYour current bill is $125.50, which is $15.00 higher than last month.\n\nHere's what changed:\n\n• Data overage charges: $10.00\n• International roaming: $5.00\n\nYour plan includes 10GB of data. This month you used 12GB, resulting in overage charges.",
+        buttons: [
+          { text: "View Full Bill", action: "view_bill", primary: true },
+          { text: "Pay Bill", action: "pay_bill", primary: true }
+        ]
       });
     }
   }
@@ -649,24 +663,10 @@ private userName ="";
   }
 
   private handleSupportRequest(): void {
-    // Set flag to reopen chat after login
-    sessionStorage.setItem('reopenChatAfterLogin', 'true');
-    
     this.addBotMessage({
       type: 'text',
-      text: "Now let's have you sign in so I can get you the best answers",
-      buttons: [
-        { text: "Sign In", action: "login", primary: true }
-      ]
+      text: "Can you tell me more about what you need help with?"
     });
-     
-    setTimeout(() => {
-      this.addBotMessage({
-        type: 'text',
-        text: "We'll resume our conversation after you sign-in. Opening a window for you to do that."
-      });
-    }, 1000);
-  
   }
 
   private handleWirelessService(): void {
@@ -920,16 +920,31 @@ private userName ="";
   // Execute the user's original request after sign-in
   private executeUserRequest(): void {
     if (this.pendingAction === 'bill_analysis' || this.lastUserQuestion.toLowerCase().includes('bill') && this.lastUserQuestion.toLowerCase().includes('high')) {
-      // Add typing indicator delay for bill analysis
-      this.addBotMessage({
-        type: 'text',
-        text: 'Let me analyze your bill for you...'
-      });
-      
-      setTimeout(() => {
-        this.showBillAnalysis();
-        this.clearPendingState();
-      }, 3000); // Increased to 3 seconds
+      // For consumer flow, ask about service type
+      if (this.userFlowContext === 'consumer') {
+        setTimeout(() => {
+          this.addBotMessage({
+            type: 'text',
+            text: "So I can get you the right info, what service are you asking about?",
+            buttons: [
+              { text: "AT&T Wireless", action: "service_wireless", primary: true },
+              { text: "AT&T Internet", action: "service_internet", primary: true }
+            ]
+          });
+          this.clearPendingState();
+        }, 1000);
+      } else {
+        // For small-business flow, show bill analysis directly
+        this.addBotMessage({
+          type: 'text',
+          text: 'Let me analyze your bill for you...'
+        });
+
+        setTimeout(() => {
+          this.showBillAnalysis();
+          this.clearPendingState();
+        }, 3000); // Increased to 3 seconds
+      }
     } else if (this.pendingAction === 'view_bill' || this.lastUserQuestion.toLowerCase().includes('view bill')) {
       this.addBotMessage({
         type: 'text',
