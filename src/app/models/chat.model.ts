@@ -99,5 +99,6 @@ export interface ServiceItem {
 
 export interface User {
   email: string;
+  userName: string;
   isAuthenticated: boolean;
 }
