@@ -341,10 +341,7 @@ import { ChatMessage } from '../../models/chat.model';
         </div>
 
         <!-- Signed In Status -->
-        <div *ngIf="showSignedInStatus" class="signed-in-status">
-          <span class="status-icon">✅</span>
-          <span class="status-text">You are now signed in</span>
-        </div>
+      
       </div>
 
       <div class="chat-input">
