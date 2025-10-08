@@ -421,10 +421,6 @@ export class SmallBusinessComponent implements OnInit {
         }, 800);
       }, 1200);
     }
-
-    setTimeout(() => {
-      this.showBanCard = true;
-    }, 1000);
   }
 
   onBanInput(): void {

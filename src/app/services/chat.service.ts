@@ -1096,8 +1096,9 @@ export class ChatService {
 
       case 'enter_ban_manually':
         this.addBotMessage({
-          type: 'text',
-          text: "Please enter your Billing Account Number (BAN):"
+          type: 'ban-input',
+          text: "Please enter your Billing Account Number (BAN):",
+          banAccounts: this.smallBusinessAccounts
         });
         this.currentStep = 'ban';
         break;

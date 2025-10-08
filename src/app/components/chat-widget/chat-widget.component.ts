@@ -314,6 +314,55 @@ import { ChatMessage } from '../../models/chat.model';
                 <span class="status-text">{{ message.card.text }}</span>
               </div>
 
+              <!-- BAN Input Card -->
+              <div *ngIf="message.card.type === 'ban-input'" class="ban-input-card">
+                <div class="ban-input-header">
+                  <span class="ban-input-title">{{ message.card.text }}</span>
+                </div>
+                <div class="ban-input-body">
+                  <div class="ban-input-group">
+                    <input
+                      type="text"
+                      [(ngModel)]="banInputValue"
+                      (input)="onBanInputChange(message.card.banAccounts || [])"
+                      placeholder="Enter BAN number"
+                      class="ban-text-input"
+                      autocomplete="off"
+                    />
+                    <div class="ban-input-hint">Type at least 3 characters to see suggestions</div>
+                  </div>
+
+                  <div *ngIf="filteredBanAccounts.length > 0" class="ban-suggestions">
+                    <div class="ban-suggestions-header">Suggestions</div>
+                    <div
+                      *ngFor="let account of filteredBanAccounts"
+                      class="ban-suggestion-item"
+                      (click)="selectBanAccount(account)"
+                    >
+                      <div class="ban-suggestion-content">
+                        <div class="ban-suggestion-number">{{ account.ban }}</div>
+                        <div class="ban-suggestion-name">{{ account.name }}</div>
+                        <div class="ban-suggestion-balance">{{ '$' + account.balance.toFixed(2) }}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div *ngIf="banInputValue.length >= 3 && filteredBanAccounts.length === 0" class="ban-no-results">
+                    No matching accounts found
+                  </div>
+
+                  <div class="ban-input-actions">
+                    <button
+                      class="ban-submit-btn"
+                      (click)="submitBanInput()"
+                      [disabled]="!banInputValue || banInputValue.length < 3"
+                    >
+                      Submit
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <!-- Buttons -->
               <div *ngIf="message.card.buttons && message.card.buttons.length > 0" class="message-buttons">
                 <button
@@ -662,6 +711,152 @@ import { ChatMessage } from '../../models/chat.model';
 
     .user-message-bubble .message-text {
       color: white;
+    }
+
+    .ban-input-card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 8px;
+    }
+
+    .ban-input-header {
+      margin-bottom: 12px;
+    }
+
+    .ban-input-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .ban-input-body {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .ban-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .ban-text-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: all 0.2s;
+      box-sizing: border-box;
+    }
+
+    .ban-text-input:focus {
+      outline: none;
+      border-color: #0078d7;
+      box-shadow: 0 0 0 3px rgba(0, 120, 215, 0.1);
+    }
+
+    .ban-input-hint {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .ban-suggestions {
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      overflow: hidden;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .ban-suggestions-header {
+      padding: 8px 12px;
+      background: #f9fafb;
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .ban-suggestion-item {
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .ban-suggestion-item:last-child {
+      border-bottom: none;
+    }
+
+    .ban-suggestion-item:hover {
+      background: #f9fafb;
+    }
+
+    .ban-suggestion-content {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .ban-suggestion-number {
+      font-weight: 600;
+      color: #111827;
+      min-width: 100px;
+    }
+
+    .ban-suggestion-name {
+      flex: 1;
+      color: #6b7280;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ban-suggestion-balance {
+      font-weight: 600;
+      color: #059669;
+      min-width: 70px;
+      text-align: right;
+    }
+
+    .ban-no-results {
+      padding: 12px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 13px;
+      background: #f9fafb;
+      border-radius: 6px;
+    }
+
+    .ban-input-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .ban-submit-btn {
+      padding: 8px 20px;
+      background: #0078d7;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .ban-submit-btn:hover:not(:disabled) {
+      background: #005a9e;
+    }
+
+    .ban-submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     .message-buttons {
@@ -1667,6 +1862,8 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
   showSignedInStatus = false;
   isAuthenticated = false;
   userName = '';
+  banInputValue = '';
+  filteredBanAccounts: any[] = [];
   private subscriptions: Subscription[] = [];
 
   constructor(
@@ -1758,12 +1955,37 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
     const now = new Date();
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const dayName = days[now.getDay()];
-    const time = now.toLocaleTimeString([], { 
-      hour: 'numeric', 
+    const time = now.toLocaleTimeString([], {
+      hour: 'numeric',
       minute: '2-digit',
-      hour12: true 
+      hour12: true
     });
     return `${dayName} ${time}`;
+  }
+
+  onBanInputChange(accounts: any[]): void {
+    const input = this.banInputValue.trim();
+    if (input.length >= 3) {
+      this.filteredBanAccounts = accounts.filter(account =>
+        account.ban.toLowerCase().includes(input.toLowerCase()) ||
+        account.name.toLowerCase().includes(input.toLowerCase())
+      ).slice(0, 5);
+    } else {
+      this.filteredBanAccounts = [];
+    }
+  }
+
+  selectBanAccount(account: any): void {
+    this.banInputValue = account.ban;
+    this.filteredBanAccounts = [];
+  }
+
+  submitBanInput(): void {
+    if (this.banInputValue && this.banInputValue.length >= 3) {
+      this.chatService.sendMessage(this.banInputValue);
+      this.banInputValue = '';
+      this.filteredBanAccounts = [];
+    }
   }
 
   getUserName(): string {

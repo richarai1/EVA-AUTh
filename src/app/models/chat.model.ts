@@ -6,7 +6,7 @@ export interface ChatMessage {
 }
 
 export interface ChatCard {
-  type: 'text' | 'card' | 'image' | 'form' | 'bill-summary' | 'bill-analysis' | 'payment-method' | 'status' | 'business-security' | 'connection-status' | 'option-cards' | 'signed-in-status';
+  type: 'text' | 'card' | 'image' | 'form' | 'bill-summary' | 'bill-analysis' | 'payment-method' | 'status' | 'business-security' | 'connection-status' | 'option-cards' | 'signed-in-status' | 'ban-input';
   title?: string;
   subtitle?: string;
   text?: string;
@@ -27,6 +27,7 @@ export interface ChatCard {
   additionalInfo?: string;
   paymentAmount?: number;
   statusType?: 'success' | 'error' | 'info' | 'warning';
+  banAccounts?: BanAccount[];
 }
 
 export interface ChatFormField {
@@ -105,4 +106,10 @@ export interface User {
   email: string;
   userName: string;
   isAuthenticated: boolean;
+}
+
+export interface BanAccount {
+  ban: string;
+  name: string;
+  balance: number;
 }
