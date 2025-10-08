@@ -26,7 +26,7 @@ import { ChatService } from '../../services/chat.service';
       left: 0;
       width: 100%;
       height: 100%;
-      background-image: url('/assets/image-12.png');
+      background-image: url('/assets/bill.png');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
@@ -47,9 +47,12 @@ export class BillsComponent implements OnInit {
       setTimeout(() => {
         this.chatService.openChat();
 
-        // Reinitialize after login with delay
         setTimeout(() => {
-          this.chatService.reinitializeAfterLogin();
+          this.chatService.showSignedInStatus();
+
+          setTimeout(() => {
+            this.chatService.reinitializeAfterLogin();
+          }, 800);
         }, 800);
       }, 1200);
     }
