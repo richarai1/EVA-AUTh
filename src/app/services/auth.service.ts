@@ -73,9 +73,9 @@ export class AuthService {
 
           // Set different user names based on flow context
           if (this.userFlowContext === 'consumer') {
-            userName = 'Richa Rai';
+            userName = 'GreenLeaf Landscaping LLC';
           } else if (this.userFlowContext === 'small-business') {
-            userName = 'INSPECTOR DRAIN INC';
+            userName = 'LENNAR CORPORATION';
           } else if (this.userFlowContext === 'enterprise') {
             userName = 'GLOBAL TECH SOLUTIONS';
           }
