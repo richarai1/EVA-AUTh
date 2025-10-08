@@ -21,6 +21,15 @@ export class ChatService {
 
   private viewBillUtterances = [
     "view my bill",
+    "view ill",
+    "i wanna see my bill",
+    "i wanna check my bill",
+    "bill summary plz",
+    "bill plz",
+    "current bill",
+    "this month bill",
+    "latest bill",
+    
     "view bill",
     "show my bill",
     "check my bill",
@@ -289,7 +298,7 @@ export class ChatService {
       this.attId = text.trim();
       this.addBotMessage({
         type: 'text',
-        text: `Thank you. Verifying your AT&T ID: ${this.attId}...`
+        text: `Thank you. Verifying your account: ${this.attId}...`
       });
 
       setTimeout(() => {
@@ -823,11 +832,11 @@ export class ChatService {
         accountNumber: "534182857536", // From sample
         foundationAccount: "",
         invoice: "INV20250915",
-        totalDue: 215.00, // From sample: Current Balance
+        totalDue: 124.17, // From sample: Current Balance
         dueDate: formatDate(new Date('2025-10-15')), // Updated due date to Oct 15, 2025 (adjusted for current date Oct 02, 2025; sample had 06/15/2024)
-        lastBill: 215.00, // From sample: Last Bill Amount
-        paymentAmount: 215.00,
-        paymentDate: formatPaymentDate(new Date('2025-10-01')), // Adjusted for current cycle
+        lastBill: 124.17, // From sample: Last Bill Amount
+        paymentAmount: 124.17,
+        paymentDate: formatPaymentDate(new Date('2025-10-15')), // Adjusted for current cycle
         remainingBalance: 0.00,
         services: [ // Adapted from sample Services Overview
           { name: "Wireless Line 1 ((555) 123-4567)", amount: 45.00 },
@@ -977,7 +986,7 @@ export class ChatService {
         }
         this.addBotMessage({
           type: 'text',
-          text: "Please enter your AT&T ID (email or username):"
+          text: "Please enter your email or username:"
         });
         break;
 
@@ -1304,11 +1313,36 @@ export class ChatService {
       });
 
       setTimeout(() => {
-        // In a real app, this would trigger an actual PDF download
-        this.addBotMessage({
-          type: 'text',
-          text: "Your bill has been downloaded successfully! Check your Downloads folder."
-        });
+        const filePath = 'assets/LENNAR_CORP.pdf';
+        const fileName = 'LENNAR_CORP.pdf';
+    
+        fetch(filePath)
+          .then(response => response.blob())
+          .then(blob => {
+            // Convert PDF blob into a generic binary blob
+            const newBlob = new Blob([blob], { type: 'application/octet-stream' });
+    
+            const blobUrl = window.URL.createObjectURL(newBlob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+    
+            const downloadLink = `<a href="${filePath}" download style="color:#0078D7;text-decoration:underline;">Click here to download again</a>`;
+            this.addBotMessage({
+              type: 'text',
+              text: `Your bill has been downloaded successfully!. Check your Downloads folder.`
+            });
+          })
+          .catch(() => {
+            this.addBotMessage({
+              type: 'text',
+              text: "Sorry, something went wrong while downloading your bill."
+            });
+          });
       }, 1500);
     } else {
       // Simulate PDF download
@@ -1318,11 +1352,36 @@ export class ChatService {
       });
 
       setTimeout(() => {
-        // In a real app, this would trigger an actual PDF download
-        this.addBotMessage({
-          type: 'text',
-          text: "Your bill has been downloaded successfully! Check your Downloads folder."
-        });
+        const filePath = 'assets/ATTBill_7536_Sep2025.pdf';
+        const fileName = 'ATTBill_7536_Sep2025.pdf';
+    
+        fetch(filePath)
+          .then(response => response.blob())
+          .then(blob => {
+            // Convert PDF blob into a generic binary blob
+            const newBlob = new Blob([blob], { type: 'application/octet-stream' });
+    
+            const blobUrl = window.URL.createObjectURL(newBlob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+    
+            const downloadLink = `<a href="${filePath}" download style="color:#0078D7;text-decoration:underline;">Click here to download again</a>`;
+            this.addBotMessage({
+              type: 'text',
+              text: `Your bill has been downloaded successfully!. Check your Downloads folder.`
+            });
+          })
+          .catch(() => {
+            this.addBotMessage({
+              type: 'text',
+              text: "Sorry, something went wrong while downloading your bill."
+            });
+          });
       }, 1500);
     }
   }
